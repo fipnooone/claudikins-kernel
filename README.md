@@ -211,7 +211,7 @@ winget install jqlang.jq
 
 ## Status
 
-**v1.2.0** - Full Release - Regularly Maintained.
+**v1.2.1** - Full Release - Regularly Maintained.
 
 [View the marketplace](https://github.com/elb-pr/claudikins-marketplace) | [Changelog](CHANGELOG.md)
 
