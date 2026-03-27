@@ -106,22 +106,18 @@ cat > "$SHIP_STATE" << EOF
 }
 EOF
 
-echo "Ship session initialized: $SESSION_ID"
-echo "Verified commit: ${VERIFY_COMMIT:-"(not tracked)"}"
-echo ""
-echo "Gate check: PASSED"
-echo "Code integrity: VERIFIED"
+echo "Ship session initialized: $SESSION_ID" >&2
+echo "Verified commit: ${VERIFY_COMMIT:-"(not tracked)"}" >&2
+echo "" >&2
+echo "Gate check: PASSED" >&2
+echo "Code integrity: VERIFIED" >&2
 
 # Output JSON for Claude
-cat << EOF
+SHIP_INIT_MSG="Ship session initialized: ${SESSION_ID}. Verified commit: ${VERIFY_COMMIT:-not tracked}. Gate check: PASSED. Code integrity: VERIFIED."
+SHIP_INIT_MSG_ESCAPED=$(printf '%s' "$SHIP_INIT_MSG" | jq -Rs '.')
+cat <<EOF
 {
-  "hook": "ship-init",
-  "status": "success",
-  "session_id": "$SESSION_ID",
-  "verify_session_id": "$VERIFY_SESSION",
-  "verified_commit": "$VERIFY_COMMIT",
-  "gate_check": "passed",
-  "code_integrity": "verified"
+  "systemMessage": $SHIP_INIT_MSG_ESCAPED
 }
 EOF
 

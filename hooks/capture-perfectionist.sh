@@ -113,12 +113,12 @@ if [ -f "$SHIP_STATE" ]; then
 fi
 
 # Output for Claude
-cat << EOF
+MSG=$(printf 'git-perfectionist completed\nFiles updated: %s\nSections approved: %s\nBackup: %s' \
+  "$FILES_UPDATED" "$SECTIONS_APPROVED" "$BACKUP_FILE")
+MSG_ESCAPED=$(printf '%s' "$MSG" | jq -Rs '.')
+cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SubagentStop",
-    "additionalContext": "git-perfectionist completed\\nFiles updated: $FILES_UPDATED\\nSections approved: $SECTIONS_APPROVED\\nBackup: $BACKUP_FILE"
-  }
+  "systemMessage": $MSG_ESCAPED
 }
 EOF
 

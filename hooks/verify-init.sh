@@ -26,12 +26,10 @@ if [[ "$USER_PROMPT" =~ --resume ]] || [[ "$USER_PROMPT" =~ --session-id ]]; the
     if [ -f "$VERIFY_STATE" ]; then
         SESSION_ID=$(jq -r '.session_id // ""' "$VERIFY_STATE" 2>/dev/null || echo "")
         if [ -n "$SESSION_ID" ]; then
+            # SessionStart hooks don't support hookSpecificOutput — use systemMessage
             cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "Resuming verify session: ${SESSION_ID}"
-  }
+  "systemMessage": "Resuming verify session: ${SESSION_ID}"
 }
 EOF
             exit 0
@@ -109,10 +107,7 @@ mkdir -p "$CLAUDE_DIR/agent-outputs/simplification"
 # Output success context
 cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "Verify session initialised: ${VERIFY_SESSION}\\nLinked to execute session: ${EXECUTE_SESSION}\\nBranch: ${EXECUTE_BRANCH}"
-  }
+  "systemMessage": "Verify session initialised: ${VERIFY_SESSION}\nLinked to execute session: ${EXECUTE_SESSION}\nBranch: ${EXECUTE_BRANCH}"
 }
 EOF
 

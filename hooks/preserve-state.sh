@@ -43,12 +43,12 @@ output_success() {
             ;;
     esac
 
+    local msg="Plan session interrupted and state preserved. Session: ${session_id}. To resume after context compaction: ${resume_cmd}"
+    local msg_escaped
+    msg_escaped=$(printf '%s' "$msg" | jq -Rs '.')
     cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "PreCompact",
-    "additionalContext": "Plan session interrupted and state preserved. Session: ${session_id}. To resume after context compaction: ${resume_cmd}"
-  }
+  "systemMessage": $msg_escaped
 }
 EOF
     exit 0

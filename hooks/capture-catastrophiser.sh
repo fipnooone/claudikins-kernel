@@ -103,12 +103,12 @@ jq --arg status "$VERIFICATION_STATUS" \
    "$VERIFY_STATE" > "${VERIFY_STATE}.tmp" && mv "${VERIFY_STATE}.tmp" "$VERIFY_STATE"
 
 # Output context for logging
+MSG=$(printf 'catastrophiser completed: %s\nEvidence items: %s\nOutput saved to: %s' \
+  "$VERIFICATION_STATUS" "$EVIDENCE_COUNT" "$OUTPUT_FILE")
+MSG_ESCAPED=$(printf '%s' "$MSG" | jq -Rs '.')
 cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SubagentStop",
-    "additionalContext": "catastrophiser completed: ${VERIFICATION_STATUS}\\nEvidence items: ${EVIDENCE_COUNT}\\nOutput saved to: ${OUTPUT_FILE}"
-  }
+  "systemMessage": $MSG_ESCAPED
 }
 EOF
 

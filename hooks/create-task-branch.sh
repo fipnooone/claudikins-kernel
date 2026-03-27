@@ -87,12 +87,12 @@ if GIT_OUTPUT=$(git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" 2>&1); then
 
     # Output context for babyclaude with worktree path
     # The orchestrator should use this path as cwd when spawning babyclaude
+    WORKTREE_MSG=$(printf 'WORKTREE_PATH: %s\nBRANCH: %s\n\nYou are working in an isolated worktree. All your file operations happen in: %s\n\nDo NOT use git commands - the orchestrator handles all git operations.' \
+      "$WORKTREE_PATH" "$BRANCH_NAME" "$WORKTREE_PATH")
+    WORKTREE_MSG_ESCAPED=$(printf '%s' "$WORKTREE_MSG" | jq -Rs '.')
     cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SubagentStart",
-    "additionalContext": "WORKTREE_PATH: ${WORKTREE_PATH}\nBRANCH: ${BRANCH_NAME}\n\nYou are working in an isolated worktree. All your file operations happen in: ${WORKTREE_PATH}\n\nDo NOT use git commands - the orchestrator handles all git operations."
-  }
+  "systemMessage": $WORKTREE_MSG_ESCAPED
 }
 EOF
     exit 0

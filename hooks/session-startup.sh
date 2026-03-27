@@ -68,22 +68,18 @@ if [ -f "$PLAN_STATE" ]; then
     fi
 
     # Output JSON for Claude's context (SessionStart stdout is added to context)
+    SESSION_MSG="Existing plan session found: ${SESSION_ID} (status: ${STATUS}, phase: ${PHASE}, age: ${AGE_HOURS}h). Use --session-id to resume or start fresh with claudikins-kernel:outline."
+    SESSION_MSG_ESCAPED=$(printf '%s' "$SESSION_MSG" | jq -Rs '.')
     cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "Existing plan session found: ${SESSION_ID} (status: ${STATUS}, phase: ${PHASE}, age: ${AGE_HOURS}h). Use --session-id to resume or start fresh with claudikins-kernel:outline."
-  }
+  "systemMessage": $SESSION_MSG_ESCAPED
 }
 EOF
 else
     # No existing session - just confirm directories ready
-    cat <<EOF
+    cat <<'EOF'
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "claudikins-kernel directories initialised. Ready for claudikins-kernel:outline command."
-  }
+  "systemMessage": "claudikins-kernel directories initialised. Ready for claudikins-kernel:outline command."
 }
 EOF
 fi

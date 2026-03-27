@@ -118,12 +118,12 @@ ${RESUME_MSG}
 Run claudikins-kernel:execute --resume to continue.
 EOM
 
-# Output checkpoint notification using jq for proper JSON escaping
-jq -n --arg msg "$DISPLAY_MSG" '{
-  "hookSpecificOutput": {
-    "hookEventName": "Stop",
-    "additionalContext": $msg
-  }
-}'
+# Output checkpoint notification
+DISPLAY_MSG_ESCAPED=$(printf '%s' "$DISPLAY_MSG" | jq -Rs '.')
+cat <<EOF
+{
+  "stopReason": $DISPLAY_MSG_ESCAPED
+}
+EOF
 
 exit 0

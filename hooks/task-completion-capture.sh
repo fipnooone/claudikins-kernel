@@ -189,10 +189,7 @@ REVIEW_CONTEXT_ESCAPED=$(echo "$REVIEW_CONTEXT" | jq -Rs '.')
 # Output context for orchestrator - includes diff for reviewer skills
 cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SubagentStop",
-    "additionalContext": ${REVIEW_CONTEXT_ESCAPED}
-  }
+  "systemMessage": $REVIEW_CONTEXT_ESCAPED
 }
 EOF
 

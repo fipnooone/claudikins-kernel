@@ -115,12 +115,12 @@ jq --arg status "$SIMPLIFY_STATUS" \
    "$VERIFY_STATE" > "${VERIFY_STATE}.tmp" && mv "${VERIFY_STATE}.tmp" "$VERIFY_STATE"
 
 # Output context for logging
+MSG=$(printf 'cynic completed: %s\nChanges made: %s, reverted: %s\nLines removed: %s\nTests pass: %s' \
+  "$SIMPLIFY_STATUS" "$CHANGES_MADE" "$CHANGES_REVERTED" "$LINES_REMOVED" "$TESTS_PASS")
+MSG_ESCAPED=$(printf '%s' "$MSG" | jq -Rs '.')
 cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "SubagentStop",
-    "additionalContext": "cynic completed: ${SIMPLIFY_STATUS}\\nChanges made: ${CHANGES_MADE}, reverted: ${CHANGES_REVERTED}\\nLines removed: ${LINES_REMOVED}\\nTests pass: ${TESTS_PASS}"
-  }
+  "systemMessage": $MSG_ESCAPED
 }
 EOF
 

@@ -75,26 +75,22 @@ PR_NUMBER=$(jq -r '.phases.pr_creation.pr_number // "unknown"' "$SHIP_STATE")
 TARGET=$(jq -r '.target // "main"' "$SHIP_STATE")
 SESSION_ID=$(jq -r '.session_id // "unknown"' "$SHIP_STATE")
 
-echo ""
-echo "=========================================="
-echo "  SHIP COMPLETE"
-echo "=========================================="
-echo ""
-echo "Session: $SESSION_ID"
-echo "PR: #$PR_NUMBER"
-echo "Target: $TARGET"
-echo "Status: SHIPPED"
-echo ""
+SHIP_MSG="
+==========================================
+  SHIP COMPLETE
+==========================================
 
-# Output JSON for Claude
-cat << EOF
+Session: $SESSION_ID
+PR: #$PR_NUMBER
+Target: $TARGET
+Status: SHIPPED
+"
+
+# Stop hooks use top-level fields — custom fields are not valid and cause validation errors
+SHIP_MSG_ESCAPED=$(printf '%s' "$SHIP_MSG" | jq -Rs '.')
+cat <<EOF
 {
-  "hook": "ship-complete",
-  "status": "success",
-  "session_id": "$SESSION_ID",
-  "pr_number": "$PR_NUMBER",
-  "target": "$TARGET",
-  "shipped": true
+  "stopReason": $SHIP_MSG_ESCAPED
 }
 EOF
 

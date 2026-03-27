@@ -27,14 +27,31 @@ if [[ "$COMMAND" =~ ^git[[:space:]]+commit && ! "$COMMAND" =~ --no-edit ]]; then
     # Don't modify if it already has -m (message provided)
     if [[ ! "$COMMAND" =~ -m[[:space:]] ]]; then
         SANITIZED="${COMMAND} --no-edit"
-        echo "{\"decision\": \"allow\", \"updatedInput\": {\"command\": \"$SANITIZED\"}}"
+        SANITIZED_ESCAPED=$(printf '%s' "$SANITIZED" | jq -Rs '.')
+        cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow",
+    "updatedInput": {"command": $SANITIZED_ESCAPED}
+  }
+}
+EOF
         exit 0
     fi
 fi
 
 # 2. Prevent rm -rf on dangerous paths
 if [[ "$COMMAND" =~ rm[[:space:]]+-rf?[[:space:]]+(\/|~|\$HOME) ]]; then
-    echo '{"decision": "block", "reason": "Refusing to rm -rf on root, home, or $HOME"}'
+    cat <<'EOF'
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "Refusing to rm -rf on root, home, or $HOME"
+  }
+}
+EOF
     exit 0
 fi
 
