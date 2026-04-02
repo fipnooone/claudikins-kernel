@@ -32,7 +32,7 @@ description: |
   </commentary>
   </example>
 
-model: opus
+model: sonnet
 permissionMode: plan
 color: blue
 status: stable

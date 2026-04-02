@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-02
+
+### Changed
+
+- Static model routing for all agents — each agent now declares its model in frontmatter based on task complexity:
+  - **opus**: babyclaude (code generation), code-reviewer (quality judgement), cynic (senior engineer polish)
+  - **sonnet**: spec-reviewer (checklist compliance), taxonomy-extremist (research), catastrophiser (output verification), conflict-resolver (merge analysis), git-perfectionist (documentation)
+- Removed hardcoded `model: "opus"` overrides from `execute.md` Task() calls — agents now own their model declarations
+
 ## [1.2.1] - 2026-03-27
 
 ### Fixed

@@ -276,9 +276,10 @@ The hook:
 Before spawning babyclaude, check if this is a test task:
 
 ```typescript
-const isTestTask = task.name.toLowerCase().includes('test') ||
-                   task.type === 'Test' ||
-                   task.files.some(f => f.includes('.test.') || f.includes('.spec.'));
+const isTestTask =
+  task.name.toLowerCase().includes("test") ||
+  task.type === "Test" ||
+  task.files.some((f) => f.includes(".test.") || f.includes(".spec."));
 ```
 
 **Implementation Source Injection (for test tasks):**
@@ -290,15 +291,15 @@ If `isTestTask` is true, the orchestrator MUST:
 3. Inject them into the prompt as `## Implementation Sources to Test`
 
 ```typescript
-let implementationSources = '';
+let implementationSources = "";
 
 if (isTestTask && task.deps.length > 0) {
   // Gather implementation files from completed dependency tasks
-  const depTasks = task.deps.map(depId =>
-    state.tasks.find(t => t.id === depId)
-  ).filter(t => t && t.status === 'complete');
+  const depTasks = task.deps
+    .map((depId) => state.tasks.find((t) => t.id === depId))
+    .filter((t) => t && t.status === "complete");
 
-  const implFiles = depTasks.flatMap(t => t.files_changed || t.files);
+  const implFiles = depTasks.flatMap((t) => t.files_changed || t.files);
 
   // Read each implementation file
   implementationSources = `
@@ -307,7 +308,7 @@ if (isTestTask && task.deps.length > 0) {
 The following implementation files are from your dependency tasks.
 You MUST read these to understand the actual interfaces - do NOT assume or hallucinate.
 
-${implFiles.map(f => `- ${f}`).join('\n')}
+${implFiles.map((f) => `- ${f}`).join("\n")}
 
 Read these files FIRST before writing any tests.
 `;
@@ -326,11 +327,13 @@ The SubagentStart hook (create-task-branch.sh) creates a worktree for each task 
 
 ```typescript
 // Get worktree path from SubagentStart hook output (stored in state)
-const worktreePath = state.tasks.find(t => t.id === task.id)?.worktree_path;
+const worktreePath = state.tasks.find((t) => t.id === task.id)?.worktree_path;
 
 if (!worktreePath) {
   // Hook didn't create worktree - this is a bug, abort
-  throw new Error(`No worktree for task ${task.id}. Check create-task-branch.sh hook.`);
+  throw new Error(
+    `No worktree for task ${task.id}. Check create-task-branch.sh hook.`,
+  );
 }
 
 Task(babyclaude, {
@@ -357,7 +360,6 @@ Task(babyclaude, {
     - Output JSON with status and files_changed
   `,
   context: "fork",
-  model: "opus",
   cwd: worktreePath, // CRITICAL: Run babyclaude in its isolated worktree
 });
 ```
@@ -398,15 +400,16 @@ After task completes, two-stage review:
 
 **You MUST spawn the reviewer agents. Inline reviews are VIOLATIONS.**
 
-| ✅ CORRECT | ❌ VIOLATION |
-|-----------|-------------|
-| `Task(spec-reviewer, {...})` | Creating your own compliance table |
-| `Task(code-reviewer, {...})` | "Let me verify the implementation" |
-| Reading `.claude/reviews/spec/*.json` | Writing "Verdict: PASS" yourself |
+| ✅ CORRECT                            | ❌ VIOLATION                       |
+| ------------------------------------- | ---------------------------------- |
+| `Task(spec-reviewer, {...})`          | Creating your own compliance table |
+| `Task(code-reviewer, {...})`          | "Let me verify the implementation" |
+| Reading `.claude/reviews/spec/*.json` | Writing "Verdict: PASS" yourself   |
 
 **The orchestrator does NOT review. The orchestrator SPAWNS reviewers.**
 
 Before proceeding to Phase 4 (Batch Review), verify:
+
 ```
 □ .claude/reviews/spec/{task_id}.json EXISTS
 □ .claude/reviews/code/{task_id}.json EXISTS
@@ -431,7 +434,6 @@ Task(spec - reviewer, {
     Verify EACH criterion has evidence. Output JSON verdict.
   `,
   context: "fork",
-  model: "opus",
 });
 ```
 
@@ -463,7 +465,6 @@ Task(code - reviewer, {
     Only report issues with confidence >= 26.
   `,
   context: "fork",
-  model: "opus",
 });
 ```
 

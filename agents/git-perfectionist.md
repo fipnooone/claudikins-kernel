@@ -32,7 +32,7 @@ description: |
   </commentary>
   </example>
 
-model: opus
+model: sonnet
 permissionMode: acceptEdits
 color: green
 status: stable

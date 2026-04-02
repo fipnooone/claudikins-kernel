@@ -1,5 +1,3 @@
-
-
 ---
 name: babyclaude
 description: |
@@ -64,7 +62,7 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: "Evaluate if the babyclaude task implementation is complete. This is a HARD GATE - do not allow incomplete work through. Check ALL criteria: 1) All acceptance criteria addressed - not just attempted, actually complete, 2) Code compiles/lints clean, 3) Tests pass if applicable, 4) No incomplete TODOs or placeholder code, 5) Output JSON valid with all required fields. Return {\"ok\": true} ONLY if ALL criteria met. Return {\"ok\": false, \"reason\": \"specific issue\"} if ANY work remains. Be strict."
+          prompt: 'Evaluate if the babyclaude task implementation is complete. This is a HARD GATE - do not allow incomplete work through. Check ALL criteria: 1) All acceptance criteria addressed - not just attempted, actually complete, 2) Code compiles/lints clean, 3) Tests pass if applicable, 4) No incomplete TODOs or placeholder code, 5) Output JSON valid with all required fields. Return {"ok": true} ONLY if ALL criteria met. Return {"ok": false, "reason": "specific issue"} if ANY work remains. Be strict.'
           timeout: 30
         - type: command
           command: "${CLAUDE_PLUGIN_ROOT}/hooks/task-completion-capture.sh"
