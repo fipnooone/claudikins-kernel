@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-04-02
+
+### Fixed
+
+- Sequential pipeline enforcement: each command now explicitly guides to the next step (outline → execute → verify → ship) via frontmatter descriptions, Pipeline Position blocks, and PROHIBITED option lists in Next Stage sections
+- Added pipeline step anchors to all 4 command frontmatter descriptions (survives context compression)
+- Added "verify — never commit" anchor to git-workflow SKILL.md description
+- Prevents Claude from suggesting "commit changes" after /execute instead of /verify
+
 ## [1.3.0] - 2026-04-02
 
 ### Changed
