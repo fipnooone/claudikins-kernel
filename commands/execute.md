@@ -1,6 +1,6 @@
 ---
 name: claudikins-kernel:execute
-description: Execute validated plans with isolated agents and two-stage review
+description: "Execute validated plans with isolated agents and two-stage review. Step 2/4 pipeline (outline → execute → verify → ship). After completion, next step is ALWAYS /claudikins-kernel:verify — never git commit."
 argument-hint: <plan-path> | --resume | --status
 model: opus
 agent_outputs:
@@ -59,6 +59,15 @@ output-schema:
 # claudikins-kernel:execute Command
 
 You are orchestrating a task execution workflow with isolated agents and human checkpoints between batches.
+
+## Pipeline Position
+
+> `outline` → **`execute`** → `verify` → `ship` (Step 2 of 4)
+
+This command executes tasks from a validated plan. It does **not** commit to main, push to remote, or ship code — those happen in later stages.
+
+**Previous step:** `/claudikins-kernel:outline`
+**Next step:** `/claudikins-kernel:verify`
 
 ## Flags
 
@@ -699,6 +708,16 @@ On any failure:
 Never lose work. Always checkpoint before risky operations.
 
 ## Next Stage
+
+> **PIPELINE RULE:** After execution, the next step is verification — not git operations.
+> **PROHIBITED options (never offer these):**
+>
+> - "Commit changes" — not this command's responsibility
+> - "Push to remote" — that is /ship's job
+> - "Merge to main" — that is /ship's job
+> - Any git operation — this command does not own git beyond what babyclaude did
+>
+> The ONLY valid progression is to verification.
 
 When this command completes, ask:
 

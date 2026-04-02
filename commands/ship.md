@@ -1,6 +1,6 @@
 ---
 name: claudikins-kernel:ship
-description: Final shipping gate. PR creation, documentation updates, and merge with human approval.
+description: "Final shipping gate. PR creation, documentation updates, and merge with human approval. Step 4/4 pipeline (outline → execute → verify → ship). Terminal stage — no next command."
 argument-hint: <branch-name> [--target main|develop] [--skip-docs] [--squash|--preserve] [--dry-run]
 agent_outputs:
   - agent: git-perfectionist
@@ -46,6 +46,15 @@ output-schema:
 # claudikins-kernel:ship Command
 
 You are orchestrating a shipping workflow that takes verified code to production with human approval at every stage.
+
+## Pipeline Position
+
+> `outline` → `execute` → `verify` → **`ship`** (Step 4 of 4)
+
+This is the terminal stage. It creates PRs, updates documentation, and merges with human approval. There is no next command after this.
+
+**Previous step:** `/claudikins-kernel:verify`
+**Next step:** none (terminal)
 
 ## Flags
 

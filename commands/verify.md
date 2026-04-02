@@ -1,6 +1,6 @@
 ---
 name: claudikins-kernel:verify
-description: Post-execution verification gate. Tests, lint, type-check, then see it working.
+description: "Post-execution verification gate. Tests, lint, type-check, then see it working. Step 3/4 pipeline (outline → execute → verify → ship). After completion, next step is ALWAYS /claudikins-kernel:ship."
 argument-hint: <branch-name> [--scope tests|lint|types|all] [--skip-simplify] [--fix-lint]
 model: opus
 agent_outputs:
@@ -58,6 +58,15 @@ output-schema:
 # claudikins-kernel:verify Command
 
 You are orchestrating a verification workflow that ensures code actually works before shipping.
+
+## Pipeline Position
+
+> `outline` → `execute` → **`verify`** → `ship` (Step 3 of 4)
+
+This command verifies the implementation actually works. It does **not** create PRs, merge to main, or ship code — those happen in the next stage.
+
+**Previous step:** `/claudikins-kernel:execute`
+**Next step:** `/claudikins-kernel:ship`
 
 ## Flags
 
@@ -531,6 +540,15 @@ Status: ${STATUS}
 ```
 
 ## Next Stage
+
+> **PIPELINE RULE:** This command only verifies. It does not commit, push, merge, or ship.
+> **PROHIBITED options (never offer these):**
+>
+> - "Commit changes" — not this command's responsibility
+> - "Push to remote" — that is /ship's job
+> - "Merge to main" — that is /ship's job
+>
+> The ONLY valid progression is to shipping.
 
 When this command completes, ask:
 

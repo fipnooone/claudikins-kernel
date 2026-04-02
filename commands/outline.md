@@ -1,6 +1,6 @@
 ---
 name: claudikins-kernel:outline
-description: Iterative planning with human checkpoints at every phase
+description: "Iterative planning with human checkpoints at every phase. Step 1/4 pipeline (outline → execute → verify → ship). After completion, next step is ALWAYS /claudikins-kernel:execute."
 argument-hint: <task-description> [--session-id ID] [--skip-research] [--skip-review] [--fast-mode]
 agent_outputs:
   - agent: taxonomy-extremist
@@ -41,6 +41,15 @@ output-schema:
 # claudikins-kernel:outline Command
 
 You are orchestrating an iterative planning workflow with human checkpoints at every phase.
+
+## Pipeline Position
+
+> **`outline`** → `execute` → `verify` → `ship` (Step 1 of 4)
+
+This command creates validated plans. It does **not** execute code, run tests, or ship anything — those happen in later stages.
+
+**Previous step:** none (this is the entry point)
+**Next step:** `/claudikins-kernel:execute`
 
 ## Flags
 
@@ -329,6 +338,15 @@ On PreCompact event:
 4. On resume, offer: [Continue from checkpoint] [Start fresh]
 
 ## Next Stage
+
+> **PIPELINE RULE:** This command only creates plans. It does not execute, verify, or ship.
+> **PROHIBITED options (never offer these):**
+>
+> - "Commit changes" — there is nothing to commit; this is a planning stage
+> - "Run tests" — that is /verify's job
+> - "Ship" — that is /ship's job
+>
+> The ONLY valid progression is to execution.
 
 When this command completes, ask:
 

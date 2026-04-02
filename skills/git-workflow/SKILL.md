@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Use when running claudikins-kernel:execute, decomposing plans into tasks, setting up two-stage review, deciding batch sizes, or handling stuck agents — enforces isolation, verification, and human checkpoints; prevents runaway parallelization and context death
+description: "Use when running claudikins-kernel:execute, decomposing plans into tasks, setting up two-stage review, deciding batch sizes, or handling stuck agents — enforces isolation, verification, and human checkpoints; prevents runaway parallelization and context death. After execution completes, next step is always claudikins-kernel:verify — never commit to main."
 allowed-tools:
   - Read
   - Grep
@@ -112,12 +112,12 @@ After EVERY task completes, you MUST spawn BOTH reviewer agents:
 
 ### What "MUST spawn" Means
 
-| Allowed | NOT Allowed |
-|---------|-------------|
-| `Task(spec-reviewer, { prompt: "...", context: "fork" })` | Inline spec check by orchestrator |
+| Allowed                                                   | NOT Allowed                            |
+| --------------------------------------------------------- | -------------------------------------- |
+| `Task(spec-reviewer, { prompt: "...", context: "fork" })` | Inline spec check by orchestrator      |
 | `Task(code-reviewer, { prompt: "...", context: "fork" })` | "I'll just verify the code looks good" |
-| Waiting for agent output JSON | Making your own compliance table |
-| Reading from `.claude/reviews/spec/` | Skipping because "it's a simple task" |
+| Waiting for agent output JSON                             | Making your own compliance table       |
+| Reading from `.claude/reviews/spec/`                      | Skipping because "it's a simple task"  |
 
 ### Inline Reviews Are VIOLATIONS
 
