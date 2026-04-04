@@ -57,7 +57,7 @@ claudikins-kernel applies SRE discipline to AI workflows. It enforces a strict 4
 # macOS: brew install jq
 
 # Add the Claudikins marketplace
-/marketplace add elb-pr/claudikins-marketplace
+/marketplace add fipnooone/claudikins-marketplace
 
 # Install the plugin
 /plugin install claudikins-kernel
@@ -222,7 +222,7 @@ winget install jqlang.jq
 
 **v1.3.1** - Full Release - Regularly Maintained.
 
-[View the marketplace](https://github.com/elb-pr/claudikins-marketplace) | [Changelog](CHANGELOG.md)
+[View the marketplace](https://github.com/fipnooone/claudikins-marketplace) | [Changelog](CHANGELOG.md)
 
 ---
 
