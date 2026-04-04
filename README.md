@@ -175,6 +175,15 @@ Industrial-grade patterns adapted for AI workflows.
 
 Same principles, different scale. Reliability through structure - not speed through parallelism.
 
+### Model Routing
+
+Static model assignment per agent — each agent declares its model in frontmatter based on task complexity:
+
+| Model  | Agents                                                                                            | Reason                                                                |
+| ------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Opus   | `babyclaude`, `code-reviewer`, `cynic`                                                            | Judgement-heavy: code generation, quality review, senior polish       |
+| Sonnet | `spec-reviewer`, `taxonomy-extremist`, `catastrophiser`, `conflict-resolver`, `git-perfectionist` | Structured tasks: checklist compliance, research, output verification |
+
 ---
 
 ## Requirements
@@ -211,7 +220,7 @@ winget install jqlang.jq
 
 ## Status
 
-**v1.2.1** - Full Release - Regularly Maintained.
+**v1.3.1** - Full Release - Regularly Maintained.
 
 [View the marketplace](https://github.com/elb-pr/claudikins-marketplace) | [Changelog](CHANGELOG.md)
 
