@@ -67,8 +67,16 @@ BRANCH_NAME="execute/task-${TASK_ID}-${TASK_SLUG}-${UUID_SUFFIX}"
 mkdir -p "$WORKTREE_BASE"
 WORKTREE_PATH="${WORKTREE_BASE}/task-${TASK_ID}-${UUID_SUFFIX}"
 
+# Determine base branch: always branch from main if it exists, otherwise HEAD
+# This ensures worktrees include all commits merged to main before this batch started.
+if git rev-parse --verify main >/dev/null 2>&1; then
+    BRANCH_BASE="main"
+else
+    BRANCH_BASE="HEAD"
+fi
+
 # Create branch first (without checkout - we'll use worktree)
-if ! git branch "$BRANCH_NAME" 2>/dev/null; then
+if ! git branch "$BRANCH_NAME" "$BRANCH_BASE" 2>/dev/null; then
     # Branch might already exist from a previous failed attempt - that's ok
     if ! git rev-parse --verify "$BRANCH_NAME" >/dev/null 2>&1; then
         echo "ERROR: Failed to create branch: $BRANCH_NAME" >&2
