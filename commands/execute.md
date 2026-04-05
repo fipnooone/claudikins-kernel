@@ -551,7 +551,26 @@ Conflicting changes:
 [conflict-resolver agent] [Manual resolution] [Skip merge]
 ```
 
-## Phase 6: Session Completion
+## Phase 6: Merge Gate (between batches)
+
+Before starting the next batch, enforce sequential completion. Without this gate, worktrees for the next batch branch from stale main and miss changes from the current batch.
+
+1. All approved branches from current batch must be merged into main
+2. Record post-merge SHA: `git rev-parse main`
+3. Verify HEAD matches expected SHA
+4. Only then proceed to Phase 1 of next batch
+
+**PROHIBITED:** Spawning any Batch N+1 babyclaude before this gate passes.
+
+```
+MERGE GATE CHECK:
+  ✓ All batch ${batch.id} branches merged
+  ✓ main at: ${post_merge_sha}
+
+  Proceeding to Batch ${batch.id + 1}
+```
+
+## Phase 7: Session Completion
 
 After all batches:
 
