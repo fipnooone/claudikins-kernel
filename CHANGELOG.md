@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-12
+
+### Added
+
+- **Grounding enforcement** in brain-jam-plan: specific technical claims about APIs/libraries (versions, methods, install flags, URLs, compatibility) must include `[Source: URL]` or be marked `[UNVERIFIED]`
+- `citation-rules.md` reference with examples of specific vs general claims and `[UNVERIFIED]` tag rules
+- Required checklist item in `plan-checklist.md` for sourced technical claims
+- API/Library research requirement in `outline.md` Phase 2 — taxonomy-extremist in docs/external mode required for API-specific tasks
+- `--skip-research` warning now explicitly requires `[UNVERIFIED]` tags on all API/library claims
+- New Red Flags and Rationalizations-to-Resist entries for knowledge-based API claims
+
 ## [1.3.1] - 2026-04-02
 
 ### Fixed

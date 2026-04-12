@@ -107,6 +107,15 @@ These rules have no exceptions:
 - Not "typically in codebases like this"
 - If you don't know, research or ask. Don't invent.
 
+**Cite specific technical claims.**
+
+- Not "install version X.Y.Z" without a verified source
+- Not "call the `.method()` function" without checking docs
+- Any specific claim (version, method, flag, URL, compatibility) → `[Source: URL]` or mark `[UNVERIFIED]`
+- `[UNVERIFIED]` blocks plan finalisation — resolve against docs or get explicit user sign-off.
+
+See [citation-rules.md](references/citation-rules.md) for examples of specific vs. general claims.
+
 ## Plan Quality Criteria
 
 A good plan has:
@@ -152,16 +161,17 @@ See [plan-format.md](references/plan-format.md) for complete structure.
 
 Agents under pressure find excuses. These are all violations:
 
-| Excuse                                                | Reality                                                       |
-| ----------------------------------------------------- | ------------------------------------------------------------- |
-| "I'll batch questions to save time"                   | Batching causes missed requirements. One at a time.           |
-| "User knows what they want, skip brain-jam"           | Assumptions cause rework. Gather requirements explicitly.     |
-| "I'll propose solutions while gathering requirements" | Solutions bias requirements. Understand first, solve second.  |
-| "User implied preference, don't need alternatives"    | Implied ≠ decided. Always present 2-3 options.                |
-| "This is simple, don't need checkpoints"              | Simple plans still fail. Checkpoints catch errors early.      |
-| "I already know the right approach"                   | Your confidence isn't approval. User decides.                 |
-| "Alternatives will confuse them"                      | Confusion means requirements are unclear. Clarify.            |
-| "I'll get approval for multiple sections at once"     | Batched approvals hide problems. One section, one checkpoint. |
+| Excuse                                                | Reality                                                               |
+| ----------------------------------------------------- | --------------------------------------------------------------------- |
+| "I'll batch questions to save time"                   | Batching causes missed requirements. One at a time.                   |
+| "User knows what they want, skip brain-jam"           | Assumptions cause rework. Gather requirements explicitly.             |
+| "I'll propose solutions while gathering requirements" | Solutions bias requirements. Understand first, solve second.          |
+| "User implied preference, don't need alternatives"    | Implied ≠ decided. Always present 2-3 options.                        |
+| "This is simple, don't need checkpoints"              | Simple plans still fail. Checkpoints catch errors early.              |
+| "I already know the right approach"                   | Your confidence isn't approval. User decides.                         |
+| "Alternatives will confuse them"                      | Confusion means requirements are unclear. Clarify.                    |
+| "I'll get approval for multiple sections at once"     | Batched approvals hide problems. One section, one checkpoint.         |
+| "I know how this library works"                       | Memory knowledge expires. Verify against docs or mark `[UNVERIFIED]`. |
 
 **All of these mean: Follow the methodology. No shortcuts.**
 
@@ -177,6 +187,8 @@ If you're thinking any of these, you're about to violate the methodology:
 - "They already approved something similar"
 - "Checkpoints slow things down"
 - "I know what they meant"
+- "I know what version this library is at"
+- "This API method does X" (without checking docs first)
 
 **All of these mean: STOP. Return to methodology. Ask, don't assume.**
 

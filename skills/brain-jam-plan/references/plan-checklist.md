@@ -16,6 +16,7 @@ Use this checklist before finalising any plan. All items in the "Required" secti
 - [ ] Alternative approaches noted with rejection reasons
 - [ ] Dependencies on existing code identified
 - [ ] External dependencies listed (libraries, APIs, services)
+- [ ] All specific technical claims about APIs/libraries cite a source (`[Source: URL]`) or are explicitly marked `[UNVERIFIED]` and approved by user
 - [ ] Integration points with existing systems mapped
 - [ ] Breaking changes flagged and migration path noted
 
@@ -66,3 +67,4 @@ If any of these are true, DO NOT finalise:
 - Dependencies form a cycle
 - No verification strategy defined
 - User hasn't approved at every phase checkpoint
+- Plan contains `[UNVERIFIED]` tags without explicit user approval

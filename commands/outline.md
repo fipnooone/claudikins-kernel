@@ -135,6 +135,8 @@ If `--skip-research` flag set:
 
 ```
 WARNING: Skipping research reduces planning confidence to ~60%
+Plans skipping research MUST mark all specific API/library claims
+(versions, methods, install flags, compatibility) as [UNVERIFIED].
 Proceed without research context? [Yes] [No, run research]
 ```
 
@@ -153,6 +155,10 @@ taxonomy-extremist modes:
 Which research modes should we use?
 [Codebase] [Docs] [External] [All three]
 ```
+
+**API/Library research requirement:**
+
+When the task involves specific API or library claims (versions, methods, install instructions, compatibility), taxonomy-extremist in `docs` or `external` mode is required to obtain documentation URLs. See [citation-rules.md](../skills/brain-jam-plan/references/citation-rules.md) for what counts as a specific claim.
 
 **Agent spawning:**
 
