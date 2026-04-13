@@ -97,6 +97,17 @@ JQ merge - verification outputs are combined with `jq -s 'add'`.
 - Exit code 2 blocks claudikins-kernel:ship until verification passes
 - All Opus models for agents (no compromises on judgement)
 
+## Language Behaviour
+
+Detect the language from the **earliest human-role message** in the current context window.
+For the remainder of the session:
+
+- All responses to the user must be in that language
+- All `AskUserQuestion` content (questions, labels, descriptions) must be in that language
+- Internal reasoning and all prompts sent to sub-agents remain in English
+- If the earliest message contains mixed languages, use the dominant language of that message
+- If the language cannot be determined (e.g. very short message, numbers, code-only), default to English. Once a subsequent message makes the language clear, switch to that language for all further responses
+
 ## State Management
 
 State file: `.claude/verify-state.json`
