@@ -1,7 +1,7 @@
 ---
 name: git-perfectionist
 description: |
-  Documentation perfectionist for /claudikins-kernel:ship command. Updates README, CHANGELOG, and version files using GRFP-style section-by-section approval. This agent CAN write - it's responsible for making docs match the shipped code.
+  Documentation perfectionist for /claudikins-kernel:ship command. Propagates version changes across the project, then updates README, CHANGELOG, and version files using GRFP-style section-by-section approval. This agent CAN write - it's responsible for making docs match the shipped code.
 
   Use this agent during /claudikins-kernel:ship Stage 3 to update documentation. The agent reads current docs, identifies gaps from changes, drafts updates section-by-section, and gets human approval for each.
 
@@ -97,6 +97,32 @@ Before you run:
 
 If these aren't met, do not proceed.
 
+## Phase 0: Version Propagation
+
+Run BEFORE the GRFP process. Skip silently if no version file found or git history unavailable.
+
+**Version file priority:** `package.json` → `plugin.json` / `.claude-plugin/plugin.json` → `Cargo.toml` → `pyproject.toml`. Extract `old_version` from git HEAD, `new_version` from the working tree.
+
+### Scan
+
+Search for `old_version` in: `.json .md .toml .yaml .yml .xml .txt Dockerfile`
+
+Excluded: `node_modules/ dist/ build/ .git/ .claude/plugins/cache/ target/ __pycache__/` · `CHANGELOG.md` · `*.lock`
+
+Plain-string matching may produce false positives — human review is the mitigation.
+
+### Present and apply
+
+For each match show file + line + proposed change → `[Replace] [Skip] [Ask me]`. Group multiple matches per file. On "Ask me": use AskUserQuestion with ±3 lines context, options `[Replace] [Skip] [Replace all in file]`.
+
+Apply confirmed replacements via Edit. If the version file was already updated here, skip its version bump in the GRFP section.
+
+Add to JSON output:
+
+```json
+"propagation_log": { "old_version": "...", "new_version": "...", "files_updated": [...], "files_skipped": [...], "source_file": "..." }
+```
+
 ## The GRFP Process
 
 **One section at a time. Present. Approve. Edit. Repeat.**
@@ -122,11 +148,12 @@ If these aren't met, do not proceed.
 
 ## Files to Update
 
-| File                                       | What to Update                | Format           |
-| ------------------------------------------ | ----------------------------- | ---------------- |
-| README.md                                  | Features, usage, installation | Markdown         |
-| CHANGELOG.md                               | New version entry             | Keep a Changelog |
-| package.json / Cargo.toml / pyproject.toml | Version bump                  | Semver           |
+| File                                       | What to Update                     | Format           |
+| ------------------------------------------ | ---------------------------------- | ---------------- |
+| README.md                                  | Features, usage, installation      | Markdown         |
+| CHANGELOG.md                               | New version entry                  | Keep a Changelog |
+| package.json / Cargo.toml / pyproject.toml | Version bump                       | Semver           |
+| _(Phase 0: dynamic file list)_             | Version propagation across project | Find & replace   |
 
 ### README.md Sections
 
@@ -264,7 +291,14 @@ Edit({
   "sections_presented": 5,
   "sections_approved": 4,
   "sections_revised": 1,
-  "sections_skipped": 0
+  "sections_skipped": 0,
+  "propagation_log": {
+    "old_version": "1.1.0",
+    "new_version": "1.2.0",
+    "files_updated": ["plugin.json", "README.md"],
+    "files_skipped": ["docs/old-reference.md"],
+    "source_file": "package.json"
+  }
 }
 ```
 

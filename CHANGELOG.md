@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-04-13
+
+### Added
+
+- **Phase 0: Version Propagation** in git-perfectionist — runs a version propagation phase before documentation updates
+- Scans project for old version strings across config and documentation files
+- Supported file types: `.json`, `.md`, `.toml`, `.yaml`, `.yml`, `.xml`, `.txt`, `Dockerfile`
+- Excluded directories/files: `node_modules`, `dist`, `build`, `.git`, `.claude/plugins/cache`, `target`, `__pycache__`, `CHANGELOG.md`, lock files
+- Human-approved replacements per file via `AskUserQuestion` before any changes are applied
+- JSON output now includes `propagation_log` with `files_updated`, `files_skipped`, and `source_file` fields
+
 ## [1.5.0] - 2026-04-13
 
 ### Added

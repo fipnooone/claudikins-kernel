@@ -85,7 +85,7 @@ These aren't generic "agents". They're your synthetic staff - each with a job an
 | **catastrophiser**     | Verification   | The QA lead who assumes everything will break. Runs your code, takes screenshots, curls your endpoints. Sees it working, doesn't trust tests alone. |
 | **cynic**              | Simplification | The senior engineer who hates complexity. If it can be done in 5 lines, won't let you use 10.                                                       |
 | **conflict-resolver**  | Merge Handler  | The diplomat. When branches collide, proposes resolutions.                                                                                          |
-| **git-perfectionist**  | Documentation  | The pedant. README not updated? Changelog wrong? Blocked until it's right.                                                                          |
+| **git-perfectionist**  | Documentation  | The pedant. Propagates version references across the project, then updates README, CHANGELOG, version. Blocked until it's right.                    |
 
 ---
 
@@ -139,7 +139,7 @@ Merge to main with proper docs and PR.
 
 1. **Gate check** - Won't run unless verify passed AND code hasn't changed.
 2. **Commit strategy** - Squash or preserve? Message drafted, you approve.
-3. **Documentation** - git-perfectionist updates README, CHANGELOG, version. Section by section.
+3. **Documentation** - git-perfectionist propagates version references across the project, then updates README, CHANGELOG. Section by section.
 4. **PR creation** - Draft, approve, create via `gh` CLI.
 5. **Merge** - Wait for CI if you want. Merge. Cleanup branches.
 
@@ -220,7 +220,7 @@ winget install jqlang.jq
 
 ## Status
 
-**v1.4.0** - Full Release - Regularly Maintained.
+**v1.6.0** - Full Release - Regularly Maintained.
 
 [View the marketplace](https://github.com/fipnooone/claudikins-marketplace) | [Changelog](CHANGELOG.md)
 
