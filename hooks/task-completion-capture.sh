@@ -77,13 +77,24 @@ echo "$TASK_OUTPUT" > "$OUTPUT_FILE"
 BACKUP_FILE="$OUTPUTS_DIR/.backup-${CURRENT_TASK}-$(date +%s).json"
 echo "$TASK_OUTPUT" > "$BACKUP_FILE"
 
+# Extract actual status from captured output (preserve found_existing and other non-complete statuses)
+ACTUAL_STATUS=$(echo "$TASK_OUTPUT" | jq -r '.status // "completed"' 2>/dev/null || echo "completed")
+# Map agent statuses to state machine statuses: found_existing counts as completed for batch tracking
+# (orchestrator reads the output file for the actual status)
+STATE_STATUS="completed"
+if [ "$ACTUAL_STATUS" = "blocked" ] || [ "$ACTUAL_STATUS" = "partial" ]; then
+    STATE_STATUS="$ACTUAL_STATUS"
+fi
+
 # Update task status in state file
 jq --arg taskId "$CURRENT_TASK" \
-   --arg status "completed" \
+   --arg status "$STATE_STATUS" \
+   --arg actualStatus "$ACTUAL_STATUS" \
    --arg time "$TIMESTAMP" \
    --arg outputFile "$OUTPUT_FILE" \
    '(.tasks[] | select(.id == $taskId)) += {
       "status": $status,
+      "actual_status": $actualStatus,
       "completed_at": $time,
       "output_file": $outputFile
     }' \

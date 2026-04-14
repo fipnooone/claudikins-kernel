@@ -46,6 +46,7 @@ tools:
   - Edit
   - Write
   - Bash
+  - WebSearch
   - TodoWrite
   - mcp__plugin_claudikins-tool-executor_tool-executor__search_tools
   - mcp__plugin_claudikins-tool-executor_tool-executor__get_tool_schema
@@ -62,7 +63,7 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: 'Evaluate if the babyclaude task implementation is complete. This is a HARD GATE - do not allow incomplete work through. Check ALL criteria: 1) All acceptance criteria addressed - not just attempted, actually complete, 2) Code compiles/lints clean, 3) Tests pass if applicable, 4) No incomplete TODOs or placeholder code, 5) Output JSON valid with all required fields. Return {"ok": true} ONLY if ALL criteria met. Return {"ok": false, "reason": "specific issue"} if ANY work remains. Be strict.'
+          prompt: 'Evaluate if the babyclaude task implementation is complete. This is a HARD GATE - do not allow incomplete work through. EXCEPTION: If status is "found_existing" with a valid "found" object and "recommendation" field, return {"ok": true} immediately - no code changes are expected for this status. For all other statuses, check ALL criteria: 1) All acceptance criteria addressed - not just attempted, actually complete, 2) Code compiles/lints clean, 3) Tests pass if applicable, 4) No incomplete TODOs or placeholder code, 5) Output JSON valid with all required fields. Return {"ok": true} ONLY if ALL criteria met. Return {"ok": false, "reason": "specific issue"} if ANY work remains. Be strict.'
           timeout: 30
         - type: command
           command: "${CLAUDE_PLUGIN_ROOT}/hooks/task-completion-capture.sh"
@@ -168,7 +169,67 @@ If your task is to write tests (task name contains "test", files include `.test.
 
 **Why this matters:** Test agents that assume interfaces write tests for code that doesn't exist, causing cascading failures.
 
-### Step 2: Plan Implementation
+### Step 2: Pre-Implementation Check
+
+Writing code that already exists elsewhere wastes time and creates maintenance burden. A 2-minute check now prevents hours of reinventing the wheel.
+
+**Before writing any code**, check whether the task can be solved with an existing solution. This step ONLY applies to tasks that involve creating/writing new functionality. Skip this step for refactoring, testing, or modification tasks.
+
+Check these sources in order:
+
+| Source                                  | What to Look For                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| **Existing utilities in the codebase**  | Is there already a function/utility in this project that does this?    |
+| **Standard library / runtime builtins** | Does the language/runtime already provide this functionality?          |
+| **Existing packages (npm/pip/cargo)**   | Is there a well-maintained, popular package that does this?            |
+| **Popular internet solutions**          | Is there a well-known, maintained open-source solution? Use WebSearch. |
+
+**Stop early**: Check sources in order. Once a suitable solution is found at any level, stop checking — no need to continue to WebSearch if the codebase already has what you need.
+
+**Quality bar for external packages:**
+
+- **Popular**: At least ~100+ GitHub stars or 1000+ weekly downloads — not a 5-star hobby project
+- **Actively maintained**: Recent commits within the last 2 years
+- **Warning**: If a package has not been updated in >2 years, flag it as potentially abandoned and do not recommend it without caveats
+- **Ambiguous scope**: If the task name contains "create", "build", "implement", or "add new" — run the check. For "fix", "refactor", "update", "test" — skip it
+
+**If an existing solution is found**, stop and output:
+
+```json
+{
+  "task_id": "{{task-id}}",
+  "status": "found_existing",
+  "found": {
+    "type": "npm_package|stdlib|codebase_utility|open_source_library",
+    "name": "Name of the package/function/solution",
+    "url": "URL or file path (optional)",
+    "why_prefer": "Why this is better than implementing from scratch"
+  },
+  "recommendation": "What the user should do next (e.g. install X, use Y from stdlib)"
+}
+```
+
+**Do NOT proceed with implementation** when an existing solution covers the requirements. Let the orchestrator decide whether to use it or proceed with a custom implementation.
+
+<examples>
+<example>
+Task: "Implement debounce utility for search input"
+Check: codebase → nothing. stdlib → nothing. npm → lodash.debounce (50M weekly downloads, updated 2025).
+Result: found_existing → recommend lodash.debounce.
+</example>
+<example>
+Task: "Add JWT token validation middleware"
+Check: codebase → src/utils/auth.ts already has validateToken(). 
+Result: found_existing → recommend using existing validateToken().
+</example>
+<example>
+Task: "Create date formatting helper"
+Check: codebase → nothing. stdlib → Intl.DateTimeFormat (built-in).
+Result: found_existing → recommend Intl.DateTimeFormat.
+</example>
+</examples>
+
+### Step 3: Plan Implementation
 
 ```
 Break task into sub-steps if needed (use TodoWrite)
@@ -176,7 +237,7 @@ Identify files to create/modify
 Consider edge cases in acceptance criteria
 ```
 
-### Step 3: Implement
+### Step 4: Implement
 
 ```
 Write code following existing patterns
@@ -184,7 +245,7 @@ Add tests for new functionality
 Handle error cases
 ```
 
-### Step 4: Self-Verify
+### Step 5: Self-Verify
 
 Before completing, run these checks:
 
@@ -199,7 +260,7 @@ npm run lint       # or: eslint, ruff, etc.
 npm run typecheck  # or: tsc --noEmit, mypy, etc.
 ```
 
-### Step 5: Report
+### Step 6: Report
 
 Output structured JSON (see Output Format below).
 
@@ -229,6 +290,8 @@ Output structured JSON (see Output Format below).
 
 **Always output valid JSON at the end of your work:**
 
+For `complete`, `blocked`, `needs_review`:
+
 ```json
 {
   "task_id": "{{task-id}}",
@@ -256,22 +319,39 @@ Output structured JSON (see Output Format below).
 }
 ```
 
+For `found_existing`:
+
+```json
+{
+  "task_id": "{{task-id}}",
+  "status": "found_existing",
+  "found": {
+    "type": "npm_package|stdlib|codebase_utility|open_source_library",
+    "name": "lodash.debounce",
+    "url": "https://www.npmjs.com/package/lodash.debounce",
+    "why_prefer": "Battle-tested, 50M weekly downloads, covers all edge cases this task would need to handle"
+  },
+  "recommendation": "Install lodash.debounce instead of implementing from scratch. Run: npm install lodash.debounce"
+}
+```
+
 ### Status Values
 
-| Status         | Meaning                                                 |
-| -------------- | ------------------------------------------------------- |
-| `complete`     | Task done, all criteria met, verification passed        |
-| `blocked`      | Cannot proceed - needs clarification or external fix    |
-| `needs_review` | Task done but with caveats (edge case discovered, etc.) |
+| Status           | Meaning                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `complete`       | Task done, all criteria met, verification passed                                              |
+| `blocked`        | Cannot proceed - needs clarification or external fix                                          |
+| `needs_review`   | Task done but with caveats (edge case discovered, etc.)                                       |
+| `found_existing` | Existing solution found — package, stdlib, or implementation already exists. Do not reinvent. |
 
 ### Required Fields
 
 Every output MUST include:
 
 - `task_id` - Links to plan task
-- `status` - One of the three values above
-- `files_changed` - Array of modified files
-- `self_verification` - Object with verification results
+- `status` - One of the values above
+- For `complete` / `blocked` / `needs_review`: `files_changed` and `self_verification`
+- For `found_existing`: `found` (object with type, name, why_prefer) and `recommendation`
 
 ## Context Budget
 
@@ -338,8 +418,8 @@ If you notice you're approaching context limits:
    ```json
    {
      "status": "partial",
-     "completed_steps": ["Step 1", "Step 2"],
-     "remaining_steps": ["Step 3", "Step 4"],
+     "completed_steps": ["Step 1", "Step 2", "Step 3"],
+     "remaining_steps": ["Step 4", "Step 5", "Step 6"],
      "files_in_progress": ["src/auth.ts"]
    }
    ```

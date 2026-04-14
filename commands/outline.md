@@ -56,8 +56,8 @@ This command creates validated plans. It does **not** execute code, run tests, o
 | Flag              | Effect                                     |
 | ----------------- | ------------------------------------------ |
 | `--session-id ID` | Resume previous session by ID              |
-| `--skip-research` | Skip Phase 2 research                      |
-| `--skip-review`   | Skip Phase 5 review                        |
+| `--skip-research` | Skip Phase 3 research                      |
+| `--skip-review`   | Skip Phase 6 review                        |
 | `--fast-mode`     | 60-second iteration cycles                 |
 | `--timing`        | Show phase durations for velocity tracking |
 | `--list-sessions` | Show available sessions for resume         |
@@ -99,7 +99,7 @@ State file: `.claude/plan-state.json`
   "session_id": "plan-YYYY-MM-DD-HHMM",
   "started_at": "ISO timestamp",
   "project_hash": "sha256 of project dir",
-  "phase": "brain-jam|research|approaches|draft|review",
+  "phase": "sanity-check|brain-jam|research|approaches|draft|review",
   "research_complete": false,
   "human_decisions": [],
   "abandoned": false
@@ -116,7 +116,66 @@ State file: `.claude/plan-state.json`
 4. Create new session ID if starting fresh
 5. Initialise state file via session-init.sh hook
 
-## Phase 1: Brain-Jam
+## Phase 1: Sanity & Existing Solutions Check
+
+Planning a task that contradicts itself, doesn't fit the project, or already has a ready-made solution wastes everyone's time. A quick check here prevents hours of wasted effort downstream in brain-jam, research, and execution.
+
+Before investing time in brainstorming and research, verify the request is sound and not already solved.
+
+**Three checks:**
+
+| Check                   | What to look for                                                                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Logical consistency** | Does the request have internal contradictions? (e.g. "make it faster AND add 10 more validation steps" without acknowledging the trade-off)                             |
+| **Project fit**         | Does the task make sense in the context of this project? Read the codebase structure, README, and existing patterns to confirm alignment.                               |
+| **Existing solutions**  | Is there already an implementation in the codebase (Grep/Glob/Read) OR a popular, actively maintained external solution (significant stars/downloads, recent activity)? |
+
+**Existing solutions quality bar:**
+
+- **Internal:** Any existing implementation in the codebase counts — flag it for the user
+- **External:** Must be popular (significant GitHub stars or npm/PyPI downloads) AND actively maintained (commits/releases within the last 2 years). Abandoned solutions (>2 years without updates) must be flagged with a warning: `⚠ Last updated [date] — may be abandoned`
+- Random libraries with 3 GitHub stars do not qualify
+
+**When any check finds an issue:**
+
+Use `AskUserQuestion` to present the finding and ask the user how to proceed:
+
+```
+AskUserQuestion({
+  question: "[Description of finding]",
+  header: "Sanity Check",
+  options: [
+    { label: "Continue anyway", description: "Proceed despite the finding" },
+    { label: "Revise the request", description: "Adjust scope or requirements" },
+    { label: "Abandon", description: "Stop planning — this isn't needed" }
+  ]
+})
+```
+
+**If all checks pass:** Proceed directly to Phase 2 without interrupting the user.
+
+<examples>
+<example>
+Request: "Add caching to API responses"
+Logical consistency: OK. Project fit: OK. Existing solutions: Found — project already uses Redis cache in src/cache/. → STOP, ask user.
+</example>
+<example>
+Request: "Make the app faster AND add comprehensive input validation on every field"
+Logical consistency: Contradictory — validation adds latency, conflicting with "faster". → STOP, ask user to clarify priority.
+</example>
+<example>
+Request: "Implement a state management solution"
+Existing solutions: Found — zustand (45K stars, active) and jotai (19K stars, active) both solve this for React apps. → STOP, present options.
+</example>
+</examples>
+
+**Checkpoint (shown only when an issue is found — AskUserQuestion above handles the interaction):**
+
+```
+[Continue to Brain-Jam] [Revise Request] [Abandon Plan]
+```
+
+## Phase 2: Brain-Jam
 
 Load the `brain-jam-plan` skill for methodology.
 
@@ -140,7 +199,7 @@ Load the `brain-jam-plan` skill for methodology.
 [Continue to Research] [Revise Requirements] [Abandon Plan]
 ```
 
-## Phase 2: Research (default ON, skip with --skip-research)
+## Phase 3: Research (default ON, skip with --skip-research)
 
 If `--skip-research` flag set:
 
@@ -201,7 +260,7 @@ Research found no relevant results.
 [Continue to Approaches] [Back to Brain-jam] [Skip] [Abandon]
 ```
 
-## Phase 3: Approaches
+## Phase 4: Approaches
 
 Using research findings and requirements, generate 2-3 distinct approaches.
 
@@ -234,7 +293,7 @@ Using research findings and requirements, generate 2-3 distinct approaches.
 [Approach A] [Approach B] [Approach C] [Revise Approaches] [Back to Research] [Abandon]
 ```
 
-## Phase 4: Draft
+## Phase 5: Draft
 
 Section-by-section drafting with approval after each section.
 
@@ -276,7 +335,7 @@ Section-by-section drafting with approval after each section.
 [Continue] [Revise section] [Back to Approaches] [Abandon]
 ```
 
-## Phase 5: Review (default ON, skip with --skip-review)
+## Phase 6: Review (default ON, skip with --skip-review)
 
 **Reviewer selection via AskUserQuestion:**
 
@@ -328,8 +387,8 @@ When you're ready:
 
 | Flag              | Effect                      |
 | ----------------- | --------------------------- |
-| `--skip-research` | Phase 1 → Phase 3 (skip)    |
-| `--skip-review`   | Jump from Phase 4 to Output |
+| `--skip-research` | Phase 2 → Phase 4 (skip)    |
+| `--skip-review`   | Jump from Phase 5 to Output |
 | `--fast-mode`     | 60-second iteration cycles  |
 | `--session-id ID` | Resume previous session     |
 | `--timing`        | Show phase durations        |
