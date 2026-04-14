@@ -45,15 +45,8 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     # Extract the last JSON block that looks like catastrophiser output
     # Look for status field (PASS/FAIL) and evidence field
     VERIFICATION_OUTPUT=$(tail -100 "$TRANSCRIPT_PATH" | \
-        grep -oP '\{[^{}]*"status"\s*:\s*"(PASS|FAIL)"[^{}]*\}' | \
+        grep -o '{[^{}]*"status"[^{}]*}' | \
         tail -1 || echo "")
-
-    # If simple extraction failed, try multiline JSON extraction
-    if [ -z "$VERIFICATION_OUTPUT" ]; then
-        VERIFICATION_OUTPUT=$(tail -200 "$TRANSCRIPT_PATH" | \
-            grep -Pzo '(?s)\{[^{}]*"verified_at"[^{}]*"status"[^{}]*\}' | \
-            tr '\0' '\n' | tail -1 || echo "")
-    fi
 fi
 
 # If no structured output found, create a basic record

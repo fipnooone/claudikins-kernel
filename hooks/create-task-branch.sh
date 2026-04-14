@@ -22,16 +22,18 @@ INPUT=$(cat)
 # Extract agent name
 AGENT_NAME=$(echo "$INPUT" | jq -r '.agent_name // ""')
 
-# Only act on babyclaude spawns
-if [ "$AGENT_NAME" != "babyclaude" ]; then
-    exit 0
-fi
+# Only act on babyclaude spawns (handle both short and qualified agent names)
+case "$AGENT_NAME" in
+    babyclaude|claudikins-kernel:babyclaude) ;;
+    *) exit 0 ;;
+esac
 
 # Extract task info from prompt (passed by execute command)
 # Format expected: TASK_ID: <id> TASK_SLUG: <slug>
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // ""')
-TASK_ID=$(echo "$PROMPT" | grep -oP 'TASK_ID:\s*\K[^\s]+' || echo "")
-TASK_SLUG=$(echo "$PROMPT" | grep -oP 'TASK_SLUG:\s*\K[^\s]+' || echo "unknown")
+TASK_ID=$(echo "$PROMPT" | sed -nE 's/.*TASK_ID:[[:space:]]*([^[:space:]]+).*/\1/p')
+TASK_SLUG=$(echo "$PROMPT" | sed -nE 's/.*TASK_SLUG:[[:space:]]*([^[:space:]]+).*/\1/p')
+TASK_SLUG="${TASK_SLUG:-unknown}"
 
 # If no task ID, this isn't a task execution - allow spawn
 if [ -z "$TASK_ID" ]; then

@@ -8,6 +8,8 @@
 #   0 - Merge allowed (review passed) or not a merge command
 #   2 - Merge blocked (no review or review failed)
 
+set -euo pipefail
+
 # Read JSON input from stdin
 INPUT=$(cat)
 
@@ -26,7 +28,7 @@ fi
 
 # Extract branch name being merged (if present)
 # Patterns: "git merge branch-name", "git merge origin/branch"
-MERGE_BRANCH=$(echo "$COMMAND" | grep -oP 'git\s+merge\s+\K[^\s;|&]+' || echo "")
+MERGE_BRANCH=$(echo "$COMMAND" | sed -nE 's/.*git[[:space:]]+merge[[:space:]]+([^[:space:];|&]+).*/\1/p')
 
 if [ -z "$MERGE_BRANCH" ]; then
     echo "Cannot determine branch being merged. Merge blocked for safety." >&2
@@ -35,7 +37,7 @@ fi
 
 # Extract task ID from branch name
 # Format: execute/task-{id}-{slug}-{uuid}
-TASK_ID=$(echo "$MERGE_BRANCH" | grep -oP 'task-\K[^-]+' || echo "")
+TASK_ID=$(echo "$MERGE_BRANCH" | sed -nE 's/.*task-([^-]+).*/\1/p')
 
 if [ -z "$TASK_ID" ]; then
     # Not a task branch - might be a regular merge, allow it
@@ -43,24 +45,33 @@ if [ -z "$TASK_ID" ]; then
     exit 0
 fi
 
-# Check for review verdict
+# Check for review verdicts (two separate files per SKILL.md contract)
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 REVIEW_DIR="$PROJECT_DIR/.claude/reviews"
-VERDICT_FILE="$REVIEW_DIR/${TASK_ID}/verdict.json"
+SPEC_FILE="$REVIEW_DIR/spec/${TASK_ID}.json"
+CODE_FILE="$REVIEW_DIR/code/${TASK_ID}.json"
 
-if [ ! -f "$VERDICT_FILE" ]; then
-    echo "MERGE BLOCKED: No review verdict found for task ${TASK_ID}" >&2
+if [ ! -f "$SPEC_FILE" ]; then
+    echo "MERGE BLOCKED: No spec review verdict found for task ${TASK_ID}" >&2
     echo "" >&2
-    echo "Required: $VERDICT_FILE" >&2
+    echo "Required: $SPEC_FILE" >&2
     echo "" >&2
-    echo "You MUST run spec-reviewer and code-reviewer before merging." >&2
-    echo "Both must PASS for merge to proceed." >&2
+    echo "You MUST run spec-reviewer before merging." >&2
     exit 2
 fi
 
-# Check verdict status
-SPEC_STATUS=$(jq -r '.spec_review // "MISSING"' "$VERDICT_FILE")
-CODE_STATUS=$(jq -r '.code_review // "MISSING"' "$VERDICT_FILE")
+if [ ! -f "$CODE_FILE" ]; then
+    echo "MERGE BLOCKED: No code review verdict found for task ${TASK_ID}" >&2
+    echo "" >&2
+    echo "Required: $CODE_FILE" >&2
+    echo "" >&2
+    echo "You MUST run code-reviewer before merging." >&2
+    exit 2
+fi
+
+# Check verdict status from separate files
+SPEC_STATUS=$(jq -r '.verdict // "MISSING"' "$SPEC_FILE")
+CODE_STATUS=$(jq -r '.verdict // "MISSING"' "$CODE_FILE")
 
 if [ "$SPEC_STATUS" != "PASS" ]; then
     echo "MERGE BLOCKED: Spec review did not pass" >&2

@@ -60,7 +60,11 @@ if [ -f "$PLAN_STATE" ]; then
 
     # Calculate age if possible
     if [ "$STARTED" != "not_set" ] && [ "$STARTED" != "parse_error" ] && [ "$STARTED" != "null" ]; then
-        START_EPOCH=$(date -d "$STARTED" +%s 2>/dev/null || echo "0")
+        if date --version >/dev/null 2>&1; then
+            START_EPOCH=$(date -d "$STARTED" +%s 2>/dev/null || echo "0")
+        else
+            START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${STARTED%%+*}" +%s 2>/dev/null || echo "0")
+        fi
         NOW_EPOCH=$(date +%s)
         AGE_HOURS=$(( (NOW_EPOCH - START_EPOCH) / 3600 ))
     else
