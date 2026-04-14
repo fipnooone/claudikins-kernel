@@ -45,15 +45,8 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     # Extract the last JSON block that looks like cynic output
     # Look for simplifications_made and tests_still_pass fields
     SIMPLIFICATION_OUTPUT=$(tail -100 "$TRANSCRIPT_PATH" | \
-        grep -oP '\{[^{}]*"tests_still_pass"[^{}]*\}' | \
+        grep -o '{[^{}]*"tests_still_pass"[^{}]*}' | \
         tail -1 || echo "")
-
-    # If simple extraction failed, try multiline JSON extraction
-    if [ -z "$SIMPLIFICATION_OUTPUT" ]; then
-        SIMPLIFICATION_OUTPUT=$(tail -200 "$TRANSCRIPT_PATH" | \
-            grep -Pzo '(?s)\{[^{}]*"simplifications_made"[^{}]*"tests_still_pass"[^{}]*\}' | \
-            tr '\0' '\n' | tail -1 || echo "")
-    fi
 fi
 
 # If no structured output found, create a basic record

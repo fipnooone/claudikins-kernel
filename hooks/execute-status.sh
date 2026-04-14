@@ -59,7 +59,11 @@ CURRENT_BATCH_TASKS=$(echo "$STATE" | jq -r --argjson batch "$CURRENT_BATCH" '.b
 
 # Calculate age
 if [ "$STARTED_AT" != "unknown" ] && [ "$STARTED_AT" != "null" ]; then
-    START_EPOCH=$(date -d "$STARTED_AT" +%s 2>/dev/null || echo "0")
+    if date --version >/dev/null 2>&1; then
+        START_EPOCH=$(date -d "$STARTED_AT" +%s 2>/dev/null || echo "0")
+    else
+        START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${STARTED_AT%%+*}" +%s 2>/dev/null || echo "0")
+    fi
     NOW_EPOCH=$(date +%s)
     AGE_MINUTES=$(( (NOW_EPOCH - START_EPOCH) / 60 ))
     AGE_DISPLAY="${AGE_MINUTES}m ago"

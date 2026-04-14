@@ -23,10 +23,11 @@ AGENT_NAME=$(echo "$INPUT" | jq -r '.agent_name // ""')
 AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // ""')
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.agent_transcript_path // ""')
 
-# Only act on babyclaude completions
-if [ "$AGENT_NAME" != "babyclaude" ]; then
-    exit 0
-fi
+# Only act on babyclaude completions (handle both short and qualified agent names)
+case "$AGENT_NAME" in
+    babyclaude|claudikins-kernel:babyclaude) ;;
+    *) exit 0 ;;
+esac
 
 # Check if we're in an active execution session
 if [ ! -f "$STATE_FILE" ]; then
@@ -52,7 +53,7 @@ TASK_OUTPUT=""
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     # Extract the last assistant message that looks like JSON output
     TASK_OUTPUT=$(tail -50 "$TRANSCRIPT_PATH" | \
-        grep -oP '\{[^{}]*"status"[^{}]*\}' | \
+        grep -o '{[^{}]*"status"[^{}]*}' | \
         tail -1 || echo "")
 fi
 
@@ -108,7 +109,13 @@ if [ -f "$TRACE_FILE" ]; then
         "$TRACE_FILE" 2>/dev/null || echo "")
 
     if [ -n "$START_TIME" ]; then
-        START_EPOCH=$(date -d "$START_TIME" +%s 2>/dev/null || echo "0")
+        if date --version >/dev/null 2>&1; then
+            # GNU date (Linux)
+            START_EPOCH=$(date -d "$START_TIME" +%s 2>/dev/null || echo "0")
+        else
+            # BSD date (macOS) — strip timezone for -j -f parsing
+            START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${START_TIME%%+*}" +%s 2>/dev/null || echo "0")
+        fi
         END_EPOCH=$(date +%s)
         DURATION_MS=$(( (END_EPOCH - START_EPOCH) * 1000 ))
     else

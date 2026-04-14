@@ -45,15 +45,8 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     # Extract the last JSON block that looks like perfectionist output
     # Look for files_updated field
     AGENT_OUTPUT=$(tail -100 "$TRANSCRIPT_PATH" | \
-        grep -oP '\{[^{}]*"files_updated"[^{}]*\}' | \
+        grep -o '{[^{}]*"files_updated"[^{}]*}' | \
         tail -1 || echo "")
-
-    # If simple extraction failed, try multiline JSON extraction
-    if [ -z "$AGENT_OUTPUT" ]; then
-        AGENT_OUTPUT=$(tail -200 "$TRANSCRIPT_PATH" | \
-            grep -Pzo '(?s)\{[^{}]*"sections_approved"[^{}]*\}' | \
-            tr '\0' '\n' | tail -1 || echo "")
-    fi
 fi
 
 # If no structured output found, create a basic record

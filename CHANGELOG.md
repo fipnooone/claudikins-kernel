@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-04-14
+
+### Fixed
+
+- Replace `grep -oP` (GNU PCRE) with `sed -nE` and `grep -o` across 6 hooks — fixes silent failures on macOS BSD grep
+- Add GNU/BSD `date` detection in 3 hooks — `date -d` is GNU-only, macOS uses `date -j -f`
+- Fix `merge-gate.sh` verdict path schema to match two-file layout (`spec/{id}.json` + `code/{id}.json`)
+- Fix `create-task-branch.sh` agent name matching — handle both short (`babyclaude`) and qualified (`claudikins-kernel:babyclaude`) forms
+- Fix `task-completion-capture.sh` JSON extraction pattern — unescaped braces for basic regex compatibility
+
+### Added
+
+- `capture-review.sh` SubagentStop hook — automatically persists reviewer verdicts to disk so `merge-gate.sh` can find them
+- Registered `capture-review.sh` in `hooks.json` for `spec-reviewer|code-reviewer`
+- macOS validation checklist (`docs/macos-validation-checklist.md`)
+
 ## [1.7.0] - 2026-04-14
 
 ### Added

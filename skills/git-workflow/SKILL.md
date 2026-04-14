@@ -141,7 +141,9 @@ Before ANY merge decision can be offered to the user:
 □ spec-reviewer verdict is PASS (or user override documented)
 ```
 
-If ANY file is missing: **DO NOT proceed to merge. You skipped the review.**
+**How these files get created:** The `capture-review.sh` SubagentStop hook automatically writes verdict files when `spec-reviewer` or `code-reviewer` agents complete. The orchestrator does NOT need to write these files manually — the hook handles it.
+
+If ANY file is missing: **DO NOT proceed to merge. You skipped the review.** If the hook failed to capture, check the agent transcript and write the verdict file manually as a recovery step.
 
 ### Why This Matters
 
