@@ -79,7 +79,7 @@ These aren't generic "agents". They're your synthetic staff - each with a job an
 | Agent                  | Role           | Personality                                                                                                                                         |
 | ---------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **taxonomy-extremist** | Researcher     | The librarian. Categorises everything. Reads your codebase, external docs, the web - returns structured findings.                                   |
-| **babyclaude**         | Implementer    | The eager junior. Does exactly what you specify. One task, one branch, fresh context. No scope creep.                                               |
+| **babyclaude**         | Implementer    | The eager junior. Checks for existing solutions first, then does exactly what you specify. One task, one branch, fresh context. No scope creep.     |
 | **spec-reviewer**      | Compliance     | The auditor. Did you do what you said you'd do? Mechanical check against acceptance criteria.                                                       |
 | **code-reviewer**      | Quality        | The critic. Is it actually any good? Error handling? Edge cases? Naming?                                                                            |
 | **catastrophiser**     | Verification   | The QA lead who assumes everything will break. Runs your code, takes screenshots, curls your endpoints. Sees it working, doesn't trust tests alone. |
@@ -95,10 +95,11 @@ These aren't generic "agents". They're your synthetic staff - each with a job an
 
 Iterative brainstorming until you have a solid plan.
 
-1. **Brain-jam** - Back and forth with Claude. Pick from options, don't type essays.
-2. **Research** - taxonomy-extremist agents dig through your codebase in parallel.
-3. **Approaches** - 2-3 ways to solve it. Pros, cons, recommendation. You pick.
-4. **Draft** - Plan written section by section. You approve each one.
+1. **Sanity check** - Does the request make sense? Does a solution already exist? Catches contradictions, misfit tasks, and reinvented wheels before you invest time.
+2. **Brain-jam** - Back and forth with Claude. Pick from options, don't type essays.
+3. **Research** - taxonomy-extremist agents dig through your codebase in parallel.
+4. **Approaches** - 2-3 ways to solve it. Pros, cons, recommendation. You pick.
+5. **Draft** - Plan written section by section. You approve each one.
 
 **Output:** `plan.md` with a task table that `/execute` can parse.
 
@@ -220,7 +221,7 @@ winget install jqlang.jq
 
 ## Status
 
-**v1.6.0** - Full Release - Regularly Maintained.
+**v1.7.0** - Full Release - Regularly Maintained.
 
 [View the marketplace](https://github.com/fipnooone/claudikins-marketplace) | [Changelog](CHANGELOG.md)
 

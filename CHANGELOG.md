@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-04-14
+
+### Added
+
+- **Phase 1: Sanity & Existing Solutions Check** in outline command — validates logical consistency, project fit, and checks for existing solutions (internal and external) before investing time in brain-jam and research
+- Quality bar for external solutions: must be popular (significant GitHub stars / npm downloads) AND actively maintained (commits within 2 years); abandoned solutions flagged with warning
+- AskUserQuestion checkpoint when issues found, with Continue/Revise/Abandon options
+- **Step 2: Pre-Implementation Check** in babyclaude agent — searches codebase utilities, stdlib/builtins, existing packages, and popular open-source solutions before writing code from scratch
+- `found_existing` status in babyclaude output — stops implementation when existing solution found, returns structured JSON with solution details and recommendation
+- Stop hook exception for `found_existing` status (no code changes expected)
+- `actual_status` field in task-completion-capture.sh — preserves real agent status (found_existing, blocked, partial) while mapping to state machine statuses for batch tracking
+- Examples (`<examples>` XML tags) and WHY context in both outline Phase 1 and babyclaude Step 2, per Anthropic 2026 prompt engineering best practices
+- Explicit keyword matching for pre-implementation check trigger (create/build/implement/add new → check; fix/refactor/update/test → skip)
+
 ## [1.6.0] - 2026-04-13
 
 ### Added
