@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3] - 2026-04-15
+
+### Fixed
+
+- Replace `sha256sum` (GNU coreutils) with a `sha256_cmd()` helper that falls back to `shasum -a 256` — fixes SHA-256 hashing in `verify-gate.sh` and `ship-init.sh` on macOS
+- Replace `xargs -r` (GNU-only flag) with a `while IFS= read -r` loop in `verify-gate.sh` and `batch-checkpoint-gate.sh` — fixes manifest hashing pipeline and checkpoint cleanup on macOS
+- Replace `date -Iseconds` (GNU-only format) with `date -u +"%Y-%m-%dT%H:%M:%SZ"` across all 11 affected hook scripts — fixes ISO-8601 timestamp generation on macOS BSD date
+
+### Refactored
+
+- Resolve `sha256_cmd` at script definition time (single detection) instead of on every invocation in `ship-init.sh` and `verify-gate.sh` — no behaviour change, cleaner code
+
 ## [1.7.2] - 2026-04-15
 
 ### Fixed
