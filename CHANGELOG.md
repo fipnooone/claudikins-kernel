@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-04-15
+
+### Fixed
+
+- Replace `flock` (Linux-only, util-linux) with POSIX-portable `mkdir`-based atomic locking in `execute-tracker.sh` and `verify-gate.sh` — fixes hooks on macOS where `flock` is unavailable
+
 ## [1.7.1] - 2026-04-14
 
 ### Fixed
