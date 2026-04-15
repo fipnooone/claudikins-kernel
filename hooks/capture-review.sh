@@ -51,7 +51,7 @@ fi
 REVIEW_DIR="$CLAUDE_DIR/reviews/${REVIEW_TYPE}"
 mkdir -p "$REVIEW_DIR"
 
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Try to extract verdict JSON from transcript
 VERDICT_OUTPUT=""

@@ -71,7 +71,7 @@ EXECUTE_BRANCH=$(jq -r '.branch // ""' "$EXECUTE_STATE" 2>/dev/null || echo "")
 
 # Generate new verify session ID
 VERIFY_SESSION="verify-$(date +%Y%m%d-%H%M%S)"
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Create initial verify state
 mkdir -p "$CLAUDE_DIR"

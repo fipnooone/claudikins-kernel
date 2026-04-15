@@ -37,7 +37,7 @@ fi
 # Extract tool info
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "unknown"')
 TOOL_RESULT=$(echo "$INPUT" | jq -r '.tool_result // ""' | head -c 500)  # Truncate for storage
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Get current task from state
 CURRENT_TASK=$(jq -r '.current_task // ""' "$STATE_FILE" 2>/dev/null || echo "")

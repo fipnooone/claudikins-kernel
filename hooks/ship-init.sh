@@ -59,6 +59,8 @@ if [ -n "$VERIFY_COMMIT" ] && [ -n "$CURRENT_COMMIT" ]; then
   fi
 fi
 
+sha256_cmd() { if command -v sha256sum &>/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi; }
+
 # ============================================
 # Code Integrity: C-7 File Manifest Validation
 # ============================================
@@ -67,7 +69,7 @@ if [ -f "$MANIFEST_FILE" ]; then
   VERIFIED_MANIFEST=$(jq -r '.verified_manifest // ""' "$VERIFY_STATE" 2>/dev/null || echo "")
 
   if [ -n "$VERIFIED_MANIFEST" ]; then
-    CURRENT_MANIFEST=$(sha256sum "$MANIFEST_FILE" 2>/dev/null | cut -d' ' -f1 || echo "")
+    CURRENT_MANIFEST=$(sha256_cmd "$MANIFEST_FILE" 2>/dev/null | cut -d' ' -f1 || echo "")
 
     if [ -n "$CURRENT_MANIFEST" ] && [ "$VERIFIED_MANIFEST" != "$CURRENT_MANIFEST" ]; then
       echo "ERROR: Source files changed after verification (C-7)" >&2
@@ -92,7 +94,7 @@ cat > "$SHIP_STATE" << EOF
 {
   "session_id": "$SESSION_ID",
   "verify_session_id": "$VERIFY_SESSION",
-  "started_at": "$(date -Iseconds)",
+  "started_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "verified_commit": "$VERIFY_COMMIT",
   "target": "main",
   "phases": {

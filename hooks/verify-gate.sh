@@ -17,12 +17,18 @@ VERIFY_STATE="$CLAUDE_DIR/verify-state.json"
 MANIFEST_FILE="$CLAUDE_DIR/verify-manifest.txt"
 
 # === Dependency Check (H-3) ===
-for cmd in jq git sha256sum find; do
+for cmd in jq git find; do
     if ! command -v "$cmd" &> /dev/null; then
         echo "ERROR: $cmd not installed" >&2
         exit 127
     fi
 done
+if ! command -v sha256sum &>/dev/null && ! command -v shasum &>/dev/null; then
+    echo "ERROR: sha256sum or shasum not installed" >&2
+    exit 127
+fi
+
+sha256_cmd() { if command -v sha256sum &>/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi; }
 
 # === Error handling (H-1) ===
 trap 'echo "Hook crashed: $?" >&2; exit 1' ERR
@@ -118,11 +124,11 @@ find "$PROJECT_DIR" \( \
     -not -path '*/.venv/*' \
     -not -path '*/venv/*' \
     -type f \
-    2>/dev/null | sort | xargs -r sha256sum > "$MANIFEST_FILE" 2>/dev/null || true
+    2>/dev/null | sort | while IFS= read -r f; do sha256_cmd "$f"; done > "$MANIFEST_FILE" 2>/dev/null || true
 
 # Generate manifest hash
 if [ -s "$MANIFEST_FILE" ]; then
-    MANIFEST_SHA=$(sha256sum "$MANIFEST_FILE" | cut -d' ' -f1)
+    MANIFEST_SHA=$(sha256_cmd "$MANIFEST_FILE" | cut -d' ' -f1)
     FILE_COUNT=$(wc -l < "$MANIFEST_FILE")
 else
     MANIFEST_SHA="empty"
@@ -136,7 +142,7 @@ COMMIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 TEMP_FILE=$(mktemp "${VERIFY_STATE}.XXXXXX")
 trap "rm -f '$TEMP_FILE'; rmdir '$LOCK_DIR' 2>/dev/null" EXIT
 
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Set unlock flag and manifest hash
 if ! jq --arg manifest "$MANIFEST_SHA" \

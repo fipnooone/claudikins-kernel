@@ -87,7 +87,7 @@ if [ "$CURRENT_STATUS" = "completed" ] || [ "$CURRENT_STATUS" = "abandoned" ]; t
 fi
 
 # Mark session as interrupted (recoverable)
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Read phase for resume command generation
 PHASE=$(jq -r '.phase // "unknown"' "$PLAN_STATE" 2>/dev/null || echo "unknown")

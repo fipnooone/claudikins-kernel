@@ -36,7 +36,7 @@ fi
 # Create outputs directory if needed
 mkdir -p "$OUTPUTS_DIR"
 
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 TIMESTAMP_EPOCH=$(date +%s)
 
 # Try to extract simplification output from transcript

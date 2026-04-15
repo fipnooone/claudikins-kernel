@@ -39,7 +39,7 @@ mkdir -p "$OUTPUTS_DIR"
 
 # Get current task from state
 CURRENT_TASK=$(jq -r '.current_task // ""' "$STATE_FILE" 2>/dev/null || echo "")
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 if [ -z "$CURRENT_TASK" ]; then
     # No task tracked - log warning but don't fail

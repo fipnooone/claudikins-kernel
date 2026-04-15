@@ -35,7 +35,7 @@ mkdir -p "$CHECKPOINTS_DIR"
 # Generate checkpoint ID
 CHECKPOINT_ID="checkpoint-$(date +%Y%m%d-%H%M%S)"
 CHECKPOINT_FILE="$CHECKPOINTS_DIR/${CHECKPOINT_ID}.json"
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Get current execution state
 CURRENT_BATCH=$(jq -r '.current_batch // 0' "$STATE_FILE" 2>/dev/null || echo "0")
@@ -97,7 +97,7 @@ jq --arg checkpointId "$CHECKPOINT_ID" \
 
 # Clean old checkpoints (keep last 5, only delete files >1min old to avoid race)
 find "$CHECKPOINTS_DIR" -name "checkpoint-*.json" -mmin +1 -type f 2>/dev/null | \
-    sort -r | tail -n +6 | xargs -r rm -f
+    sort -r | tail -n +6 | while IFS= read -r f; do rm -f "$f"; done
 
 # Build resume message
 if [ "$IN_PROGRESS_TASKS" -gt 0 ]; then

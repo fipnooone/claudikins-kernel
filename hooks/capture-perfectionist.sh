@@ -36,7 +36,7 @@ fi
 # Create backup dir
 mkdir -p "$BACKUP_DIR"
 
-TIMESTAMP=$(date -Iseconds)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 TIMESTAMP_EPOCH=$(date +%s)
 
 # Try to extract perfectionist output from transcript
