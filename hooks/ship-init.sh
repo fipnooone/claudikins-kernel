@@ -59,7 +59,7 @@ if [ -n "$VERIFY_COMMIT" ] && [ -n "$CURRENT_COMMIT" ]; then
   fi
 fi
 
-sha256_cmd() { if command -v sha256sum &>/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi; }
+if command -v sha256sum &>/dev/null; then sha256_cmd() { sha256sum "$@"; }; else sha256_cmd() { shasum -a 256 "$@"; }; fi
 
 # ============================================
 # Code Integrity: C-7 File Manifest Validation
