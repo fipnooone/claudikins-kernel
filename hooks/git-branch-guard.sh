@@ -61,7 +61,7 @@ fi
 #   commit     - Commit staged changes
 
 # Extract the git subcommand
-GIT_SUBCOMMAND=$(echo "$COMMAND" | sed -n 's/.*git\s\+\([a-z-]\+\).*/\1/p')
+GIT_SUBCOMMAND=$(echo "$COMMAND" | sed -nE 's/.*git[[:space:]]+([a-z-]+).*/\1/p')
 
 # Allowlist of safe git subcommands
 case "$GIT_SUBCOMMAND" in
