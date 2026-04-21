@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.5] - 2026-04-21
+
+### Fixed
+
+- `taxonomy-extremist` agent: renamed "Dual Research (Enhanced)" section to "Dual Research (Fallback Only)" — Gemini is now explicitly opt-in when native search returns insufficient results, not the default enhancement for every research task
+- Added explicit conditions table: when Gemini is justified (sparse native results, synthesis of many external sources, unknown external ecosystem) vs not needed (local codebase → Grep/Read, library docs → Context7, web research → WebSearch)
+
 ## [1.7.4] - 2026-04-21
 
 ### Fixed

@@ -80,27 +80,39 @@ Activate based on research need:
 | **docs**     | Context7, WebFetch       | Documentation, API references         |
 | **external** | Gemini, WebSearch        | Best practices, external knowledge    |
 
-## Dual Research (Enhanced)
+## Dual Research (Fallback Only)
 
-If tool-executor is available, you can enhance ANY mode with Gemini for richer results:
+Native tools are the default. Use Gemini only when they are insufficient:
 
 ```typescript
-// Check for tool-executor availability
-const tools = await search_tools("gemini");
-if (tools.length > 0) {
-  // Dual research: native tools + Gemini analysis
-  // 1. Gather findings with native tools
-  // 2. Ask Gemini to analyse/synthesise findings
-  // 3. Merge both perspectives
+// Run native tools first
+const nativeFindings = await grep("...", "src/");
+
+// Add Gemini ONLY IF:
+// - native search returned < 3 relevant results (search_exhausted)
+// - task requires synthesis across many external sources
+// - question is about unknown external ecosystem (not local codebase)
+if (nativeFindings.length < 3 || searchExhausted) {
+  const tools = await search_tools("gemini");
+  if (tools.length > 0) {
+    // Gemini as last resort, not first call
+  }
 }
 ```
 
-**When to use dual research:**
+**When Gemini is justified (narrow cases):**
 
-- Complex architectural decisions
-- Unfamiliar technology stacks
-- Need for best-practice validation
-- When native search returns sparse results
+- Native search returned sparse or conflicting results
+- Synthesising best practices from many external sources
+- Unfamiliar external ecosystem where no docs tool exists
+- Question is genuinely about external knowledge, not local codebase
+
+**When Gemini is NOT needed (most cases):**
+
+- Local codebase exploration → Grep/Glob/Read/Serena
+- Library documentation → Context7
+- External best practices lookup → WebSearch
+- Code analysis of visible files → Read + your own reasoning
 
 ## Tool Discovery Protocol
 
