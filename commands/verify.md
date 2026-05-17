@@ -1,7 +1,7 @@
 ---
 name: claudikins-kernel:verify
 description: "Post-execution verification gate. Tests, lint, type-check, then see it working. Step 3/4 pipeline (outline → execute → verify → ship). After completion, next step is ALWAYS /claudikins-kernel:ship."
-argument-hint: <branch-name> [--scope tests|lint|types|all] [--skip-simplify] [--fix-lint]
+argument-hint: "<branch-name> [--scope tests|lint|types|all] [--skip-simplify] [--fix-lint]"
 model: opus
 agent_outputs:
   - agent: catastrophiser

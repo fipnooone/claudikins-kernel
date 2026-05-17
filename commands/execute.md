@@ -1,7 +1,7 @@
 ---
 name: claudikins-kernel:execute
 description: "Execute validated plans with isolated agents and two-stage review. Step 2/4 pipeline (outline → execute → verify → ship). After completion, next step is ALWAYS /claudikins-kernel:verify — never git commit."
-argument-hint: <plan-path> | --resume | --status
+argument-hint: "<plan-path> | --resume | --status"
 model: opus
 agent_outputs:
   - agent: babyclaude

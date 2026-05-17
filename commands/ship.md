@@ -1,7 +1,7 @@
 ---
 name: claudikins-kernel:ship
 description: "Final shipping gate. PR creation, documentation updates, and merge with human approval. Step 4/4 pipeline (outline → execute → verify → ship). Terminal stage — no next command."
-argument-hint: <branch-name> [--target main|develop] [--skip-docs] [--squash|--preserve] [--dry-run]
+argument-hint: "<branch-name> [--target main|develop] [--skip-docs] [--squash|--preserve] [--dry-run]"
 agent_outputs:
   - agent: git-perfectionist
     capture_to: .claude/agent-outputs/documentation/

@@ -18,8 +18,8 @@ INPUT=$(cat)
 # Extract prompt from JSON
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // ""')
 
-# Only respond to /execute --status or /execute status
-if ! echo "$PROMPT" | grep -qiE '^/execute.*(--status|status)'; then
+# Only respond to execute --status or execute status
+if ! echo "$PROMPT" | grep -qiE '^(/execute|/?claudikins-kernel:execute)([[:space:]]|$).*(--status|status)([[:space:]]|$)'; then
     exit 0
 fi
 
@@ -29,7 +29,7 @@ if [ ! -f "$STATE_FILE" ]; then
 {
   "hookSpecificOutput": {
     "hookEventName": "UserPromptSubmit",
-    "additionalContext": "No active execution session found. Run /execute <plan.md> to start."
+    "additionalContext": "No active execution session found. Run claudikins-kernel:execute <plan.md> to start."
   }
 }
 EOF

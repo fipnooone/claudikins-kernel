@@ -18,8 +18,13 @@ INPUT=$(cat)
 # Extract prompt from JSON
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // ""')
 
-# Only validate if this is an /execute command
-if ! echo "$PROMPT" | grep -qE '^/execute'; then
+# Only validate if this is an execute command
+if ! echo "$PROMPT" | grep -qE '^(/execute|/?claudikins-kernel:execute)([[:space:]]|$)'; then
+    exit 0
+fi
+
+# Do not validate status-only queries; execute-status.sh handles them.
+if echo "$PROMPT" | grep -qiE '^(/execute|/?claudikins-kernel:execute)[[:space:]]+--?status([[:space:]]|$)|^(/execute|/?claudikins-kernel:execute)[[:space:]]+status([[:space:]]|$)'; then
     exit 0
 fi
 
@@ -28,17 +33,17 @@ fi
 PLAN_PATH=""
 
 # Try to extract path argument (first non-flag argument after /execute)
-# Use array to handle paths with spaces correctly
-ARGS=$(echo "$PROMPT" | sed 's|^/execute||')
-read -ra ARGS_ARRAY <<< "$ARGS"
-for arg in "${ARGS_ARRAY[@]}"; do
-    # Skip flags
-    if [[ "$arg" == --* ]] || [[ "$arg" == -* ]]; then
+ARGS=$(echo "$PROMPT" | sed -E 's#^(/execute|/?claudikins-kernel:execute)[[:space:]]*##')
+if [ -n "$ARGS" ]; then
+    PLAN_PATH=$(python3 -c 'import shlex, sys
+args = shlex.split(sys.stdin.read())
+for arg in args:
+    if arg.startswith("-"):
         continue
-    fi
-    PLAN_PATH="$arg"
+    print(arg)
     break
-done
+' <<< "$ARGS")
+fi
 
 # If no path specified, check for most recent plan in .claude/plans/
 if [ -z "$PLAN_PATH" ]; then
@@ -70,8 +75,8 @@ if [ ! -f "$PLAN_PATH" ]; then
 fi
 
 # Check for EXECUTION_TASKS markers
-HAS_START=$(grep -c '<!-- EXECUTION_TASKS_START -->' "$PLAN_PATH" 2>/dev/null || echo "0")
-HAS_END=$(grep -c '<!-- EXECUTION_TASKS_END -->' "$PLAN_PATH" 2>/dev/null || echo "0")
+HAS_START=$(grep -c '<!-- EXECUTION_TASKS_START -->' "$PLAN_PATH" 2>/dev/null || true)
+HAS_END=$(grep -c '<!-- EXECUTION_TASKS_END -->' "$PLAN_PATH" 2>/dev/null || true)
 
 if [ "$HAS_START" -eq 0 ] || [ "$HAS_END" -eq 0 ]; then
     echo "Plan missing EXECUTION_TASKS markers. The plan must include:" >&2

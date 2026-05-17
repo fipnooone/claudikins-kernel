@@ -1,7 +1,7 @@
 ---
 name: claudikins-kernel:outline
 description: "Iterative planning with human checkpoints at every phase. Step 1/4 pipeline (outline → execute → verify → ship). After completion, next step is ALWAYS /claudikins-kernel:execute."
-argument-hint: <task-description> [--session-id ID] [--skip-research] [--skip-review] [--fast-mode]
+argument-hint: "<task-description> [--session-id ID] [--skip-research] [--skip-review] [--fast-mode]"
 agent_outputs:
   - agent: taxonomy-extremist
     capture_to: .claude/agent-outputs/research/

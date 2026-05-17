@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.6] - 2026-05-17
+
+### Added
+
+- Document recommended OpenClaude + Codex `agentRouting` settings that map `opus`-tier agents to `codexplan` and `sonnet`-tier agents to `codexspark`, using the Codex subscription/OAuth backend endpoint while preserving Claude Code model pins.
+
+### Fixed
+
+- Support `/execute`, `claudikins-kernel:execute`, and `/claudikins-kernel:execute` hook command forms, including status queries.
+- Parse quoted plan paths with spaces in `validate-plan-format.sh` and skip plan validation for execute status queries.
+- Quote command `argument-hint` frontmatter values containing YAML-special characters.
+
 ## [1.7.5] - 2026-04-21
 
 ### Fixed

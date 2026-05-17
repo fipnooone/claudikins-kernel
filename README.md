@@ -63,7 +63,7 @@ claudikins-kernel applies SRE discipline to AI workflows. It enforces a strict 4
 /plugin install claudikins-kernel
 ```
 
-Restart Claude Code. Then:
+Restart Claude Code or OpenClaude. Then:
 
 ```bash
 # Start your first disciplined session
@@ -185,9 +185,56 @@ Static model assignment per agent — each agent declares its model in frontmatt
 | Opus   | `babyclaude`, `code-reviewer`, `cynic`                                                            | Judgement-heavy: code generation, quality review, senior polish       |
 | Sonnet | `spec-reviewer`, `taxonomy-extremist`, `catastrophiser`, `conflict-resolver`, `git-perfectionist` | Structured tasks: checklist compliance, research, output verification |
 
----
+### OpenClaude + Codex routing
 
-## Requirements
+Claudikins Kernel assigns different model tiers to different agents:
+
+| Claude-family intent | Kernel agents                                                                                     | Why                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `opus`               | `babyclaude`, `code-reviewer`, `cynic`                                                            | Judgement-heavy implementation, review, and simplification                 |
+| `sonnet`             | `spec-reviewer`, `taxonomy-extremist`, `catastrophiser`, `conflict-resolver`, `git-perfectionist` | Structured compliance, research, verification, conflict handling, and docs |
+
+If you run OpenClaude with Codex, use the following recommended settings as a starting point. Codex subscription auth is only one example; the same routing idea can be adapted for OpenAI-compatible API-key providers or other models by changing `agentModels`.
+
+For Codex-backed OpenClaude, launch with a Codex model default:
+
+```bash
+export CLAUDE_CODE_USE_OPENAI=1
+export OPENAI_MODEL=codexplan
+openclaude
+```
+
+Recommended routing for Codex-backed OpenClaude:
+
+```json
+{
+  "agentModels": {
+    "codexplan": {
+      "base_url": "https://chatgpt.com/backend-api/codex",
+      "api_key": "unused"
+    },
+    "codexspark": {
+      "base_url": "https://chatgpt.com/backend-api/codex",
+      "api_key": "unused"
+    }
+  },
+  "agentRouting": {
+    "claudikins-kernel:babyclaude": "codexplan",
+    "claudikins-kernel:code-reviewer": "codexplan",
+    "claudikins-kernel:cynic": "codexplan",
+
+    "claudikins-kernel:spec-reviewer": "codexspark",
+    "claudikins-kernel:taxonomy-extremist": "codexspark",
+    "claudikins-kernel:catastrophiser": "codexspark",
+    "claudikins-kernel:conflict-resolver": "codexspark",
+    "claudikins-kernel:git-perfectionist": "codexspark"
+  }
+}
+```
+
+This setup maps the heavier `opus`-tier agents to `codexplan` and the faster `sonnet`-tier agents to `codexspark`. The `chatgpt.com/backend-api/codex` endpoint is for Codex subscription/OAuth routing; for OpenAI-compatible API-key providers, use the provider's real endpoint, model names, and API keys instead.
+
+---
 
 ### System
 
@@ -221,7 +268,7 @@ winget install jqlang.jq
 
 ## Status
 
-**v1.7.4** - Full Release - Regularly Maintained.
+**v1.7.6** - Full Release - Regularly Maintained.
 
 [View the marketplace](https://github.com/fipnooone/claudikins-marketplace) | [Changelog](CHANGELOG.md)
 

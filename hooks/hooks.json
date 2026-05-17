@@ -14,7 +14,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:verify",
+        "matcher": "(/)?claudikins-kernel:verify",
         "hooks": [
           {
             "type": "command",
@@ -24,7 +24,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:ship",
+        "matcher": "(/)?claudikins-kernel:ship",
         "hooks": [
           {
             "type": "command",
@@ -46,7 +46,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:execute",
+        "matcher": "^(/execute|(/)?claudikins-kernel:execute)(\\s|$)",
         "hooks": [
           {
             "type": "command",
@@ -56,7 +56,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:execute.*(--status|status)",
+        "matcher": "^(/execute|(/)?claudikins-kernel:execute)(\\s|$).*(--status|status)(\\s|$)",
         "hooks": [
           {
             "type": "command",
@@ -166,7 +166,7 @@
     ],
     "Stop": [
       {
-        "matcher": "claudikins-kernel:verify",
+        "matcher": "(/)?claudikins-kernel:verify",
         "hooks": [
           {
             "type": "command",
@@ -176,7 +176,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:ship",
+        "matcher": "(/)?claudikins-kernel:ship",
         "hooks": [
           {
             "type": "command",
@@ -186,7 +186,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:outline",
+        "matcher": "(/)?claudikins-kernel:outline",
         "hooks": [
           {
             "type": "command",
@@ -196,7 +196,7 @@
         ]
       },
       {
-        "matcher": "claudikins-kernel:execute",
+        "matcher": "^(/execute|(/)?claudikins-kernel:execute)(\\s|$)",
         "hooks": [
           {
             "type": "command",
