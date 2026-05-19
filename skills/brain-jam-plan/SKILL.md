@@ -79,6 +79,10 @@ Draft one section at a time. Get approval before moving on.
 
 **Never batch approvals** — each checkpoint is a chance to course-correct.
 
+## Delegation Failure Rules
+
+When delegating research/review, require structured output and stop after repeated tool validation errors. Treat malformed tool calls, invalid JSON, empty findings, and off-scope responses as failed or partial results; do not wait indefinitely or fabricate findings.
+
 ## Non-Negotiables
 
 These rules have no exceptions:
@@ -156,22 +160,26 @@ See [plan-format.md](references/plan-format.md) for complete structure.
 - Skipping the verification checklist
 - Continuing without explicit approval at checkpoints
 - Fabricating research findings when data is sparse
+- Waiting indefinitely while an agent repeats malformed or invalid tool calls
+- Treating invalid JSON or missing required fields as a successful research result
 
 ## Rationalizations to Resist
 
 Agents under pressure find excuses. These are all violations:
 
-| Excuse                                                | Reality                                                               |
-| ----------------------------------------------------- | --------------------------------------------------------------------- |
-| "I'll batch questions to save time"                   | Batching causes missed requirements. One at a time.                   |
-| "User knows what they want, skip brain-jam"           | Assumptions cause rework. Gather requirements explicitly.             |
-| "I'll propose solutions while gathering requirements" | Solutions bias requirements. Understand first, solve second.          |
-| "User implied preference, don't need alternatives"    | Implied ≠ decided. Always present 2-3 options.                        |
-| "This is simple, don't need checkpoints"              | Simple plans still fail. Checkpoints catch errors early.              |
-| "I already know the right approach"                   | Your confidence isn't approval. User decides.                         |
-| "Alternatives will confuse them"                      | Confusion means requirements are unclear. Clarify.                    |
-| "I'll get approval for multiple sections at once"     | Batched approvals hide problems. One section, one checkpoint.         |
-| "I know how this library works"                       | Memory knowledge expires. Verify against docs or mark `[UNVERIFIED]`. |
+| Excuse                                                | Reality                                                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| "I'll batch questions to save time"                   | Batching causes missed requirements. One at a time.                                              |
+| "User knows what they want, skip brain-jam"           | Assumptions cause rework. Gather requirements explicitly.                                        |
+| "I'll propose solutions while gathering requirements" | Solutions bias requirements. Understand first, solve second.                                     |
+| "User implied preference, don't need alternatives"    | Implied ≠ decided. Always present 2-3 options.                                                   |
+| "This is simple, don't need checkpoints"              | Simple plans still fail. Checkpoints catch errors early.                                         |
+| "I already know the right approach"                   | Your confidence isn't approval. User decides.                                                    |
+| "Alternatives will confuse them"                      | Confusion means requirements are unclear. Clarify.                                               |
+| "I'll get approval for multiple sections at once"     | Batched approvals hide problems. One section, one checkpoint.                                    |
+| "I know how this library works"                       | Memory knowledge expires. Verify against docs or mark `[UNVERIFIED]`.                            |
+| "The agent will recover if I wait"                    | Repeated malformed tool calls are a failed research result. Stop, record, and recover.           |
+| "Invalid JSON is close enough"                        | Structured output contracts are gates. Missing required fields means failure or manual recovery. |
 
 **All of these mean: Follow the methodology. No shortcuts.**
 

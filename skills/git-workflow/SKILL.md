@@ -39,7 +39,7 @@ Execution is about isolation, verification, and human checkpoints. Not speed.
 2. **Fresh context per task** - `context: fork` gives a clean slate
 3. **Two-stage review** - Spec compliance first, then code quality
 4. **Human checkpoints between batches** - Not between individual tasks
-5. **Commands own git** - Agents never checkout/merge/push
+5. **Commands own git integration** - Agents never checkout, switch, merge, rebase, push, amend, reset, clean, tag, stash, or ship. Implementation agents may only commit if the command explicitly allows it and hooks permit it; otherwise they report changed files and verification evidence.
 6. **Features are the unit** - Batch at feature level, not task level
 
 ### Batch Size Guidance (GOSPEL)
@@ -66,6 +66,10 @@ From a plan, extract tasks that are:
 | **Right-sized** | Not too small (noise) or large (context death) | 50-200 lines of changes                       |
 
 See [task-decomposition.md](references/task-decomposition.md) for patterns.
+
+## Agent Failure Rules
+
+When spawning implementation/review agents, provide explicit paths, criteria, schema, and stop conditions. Treat invalid JSON, missing `status`/`verdict`, or two repeated tool validation errors as failed agent results; retry once narrowly before escalating. Manual recovery artifacts require documented reviewer failure.
 
 ## Review Stages
 
@@ -107,17 +111,17 @@ See [review-criteria.md](references/review-criteria.md) for detailed checklists.
 
 After EVERY task completes, you MUST spawn BOTH reviewer agents:
 
-1. **spec-reviewer** - Spawned via `Task(spec-reviewer, {...})`
-2. **code-reviewer** - Spawned via `Task(code-reviewer, {...})` (if spec passes)
+1. **spec-reviewer** - Spawned via `Task("spec-reviewer", {...})`
+2. **code-reviewer** - Spawned via `Task("code-reviewer", {...})` (if spec passes)
 
 ### What "MUST spawn" Means
 
-| Allowed                                                   | NOT Allowed                            |
-| --------------------------------------------------------- | -------------------------------------- |
-| `Task(spec-reviewer, { prompt: "...", context: "fork" })` | Inline spec check by orchestrator      |
-| `Task(code-reviewer, { prompt: "...", context: "fork" })` | "I'll just verify the code looks good" |
-| Waiting for agent output JSON                             | Making your own compliance table       |
-| Reading from `.claude/reviews/spec/`                      | Skipping because "it's a simple task"  |
+| Allowed                                                     | NOT Allowed                            |
+| ----------------------------------------------------------- | -------------------------------------- |
+| `Task("spec-reviewer", { prompt: "...", context: "fork" })` | Inline spec check by orchestrator      |
+| `Task("code-reviewer", { prompt: "...", context: "fork" })` | "I'll just verify the code looks good" |
+| Waiting for agent output JSON                               | Making your own compliance table       |
+| Reading from `.claude/reviews/spec/`                        | Skipping because "it's a simple task"  |
 
 ### Inline Reviews Are VIOLATIONS
 
@@ -220,6 +224,18 @@ If you're thinking any of these, you're about to violate the methodology:
 ## Robustness Patterns
 
 Things go wrong. Here's how to handle them.
+
+### Malformed Tool Calls and Invalid Reviewer Output
+
+If a reviewer repeats a malformed tool call or produces invalid output:
+
+1. Stop after two repeated validation errors.
+2. Record the failure, including output path if available.
+3. Retry once with a narrower prompt and embedded evidence.
+4. If retry still fails, escalate to human or Klaus.
+5. Only write manual review artifacts from observable evidence, and include `review_recovery_note`.
+
+Do not infer PASS from silence, malformed JSON, or a completed agent notification without a valid verdict.
 
 ### SubagentStop Hook Failure (A-6)
 

@@ -4,10 +4,10 @@ How catastrophiser and cynic coordinate during claudikins-kernel:verify. This do
 
 ## Agent Overview
 
-| Agent | Purpose | Phase | Model | Required |
-|-------|---------|-------|-------|----------|
-| catastrophiser | See code working | 2 | opus | Yes |
-| cynic | Polish pass | 3 | opus | No (optional) |
+| Agent          | Purpose          | Phase | Model | Required      |
+| -------------- | ---------------- | ----- | ----- | ------------- |
+| catastrophiser | See code working | 2     | opus  | Yes           |
+| cynic          | Polish pass      | 3     | opus  | No (optional) |
 
 Both agents use `context: fork` (clean slate) and `background: true` (non-blocking spawn).
 
@@ -34,9 +34,7 @@ tools:
   - Glob
   - Bash
   - WebFetch
-  - mcp__tool-executor__search_tools
-  - mcp__tool-executor__get_tool_schema
-  - mcp__tool-executor__execute_code
+  - tool-executor discovery tools when the runtime exposes them (`search_tools`, `get_tool_schema`, `execute_code`)
 disallowedTools:
   - Edit
   - Write
@@ -44,12 +42,14 @@ disallowedTools:
 ```
 
 **Why these tools:**
+
 - Read/Grep/Glob: Understand codebase structure
 - Bash: Run servers, curl endpoints, execute CLI
 - WebFetch: Fetch pages, check responses
 - tool-executor: Playwright for screenshots, browser automation
 
 **Why Edit/Write/Task disallowed:**
+
 - catastrophiser OBSERVES, it doesn't MODIFY
 - Modifications would invalidate the verification
 - Task spawning would complicate the flow
@@ -58,13 +58,13 @@ disallowedTools:
 
 catastrophiser chooses the appropriate method based on project type:
 
-| Project Type | Primary Method | Evidence |
-|--------------|----------------|----------|
-| Web app | Start server + screenshot | PNG files, console logs |
-| API | Curl endpoints | Status codes, response bodies |
-| CLI | Run commands | stdout, stderr, exit codes |
-| Library | Run examples | Output values |
-| Service | Check health endpoint | Health response, logs |
+| Project Type | Primary Method            | Evidence                      |
+| ------------ | ------------------------- | ----------------------------- |
+| Web app      | Start server + screenshot | PNG files, console logs       |
+| API          | Curl endpoints            | Status codes, response bodies |
+| CLI          | Run commands              | stdout, stderr, exit codes    |
+| Library      | Run examples              | Output values                 |
+| Service      | Check health endpoint     | Health response, logs         |
 
 ### Fallback Hierarchy (A-3)
 
@@ -91,8 +91,14 @@ If the primary method fails, fall back in order:
   "fallbacks_attempted": [],
   "evidence": {
     "screenshots": [
-      { "path": ".claude/evidence/home.png", "description": "Home page renders" },
-      { "path": ".claude/evidence/login.png", "description": "Login form visible" }
+      {
+        "path": ".claude/evidence/home.png",
+        "description": "Home page renders"
+      },
+      {
+        "path": ".claude/evidence/login.png",
+        "description": "Login form visible"
+      }
     ],
     "curl_responses": [],
     "command_outputs": []
@@ -148,6 +154,7 @@ Method times out?
 ### Role
 
 Optional polish pass after verification succeeds. Simplifies code without changing behaviour. Only runs if:
+
 1. Phase 2 (catastrophiser) passes
 2. Human approves the polish pass
 
@@ -170,32 +177,34 @@ disallowedTools:
 ```
 
 **Why Edit but not Write:**
+
 - Edit modifies existing code (simplification)
 - Write creates new files (not simplification)
 
 **Why Bash:**
+
 - Needs to run tests after each change
 - Tests verify behaviour preservation
 
 ### Simplification Targets
 
-| Target | Action | Example |
-|--------|--------|---------|
-| Single-use helper | Inline it | `getUser()` called once → inline the query |
-| Unclear name | Rename | `x` → `userCount` |
-| Dead code | Delete | Unused function → remove |
-| Deep nesting | Flatten | if/if/if → early returns |
-| Redundant abstraction | Remove | Wrapper that just calls wrapped |
+| Target                | Action    | Example                                    |
+| --------------------- | --------- | ------------------------------------------ |
+| Single-use helper     | Inline it | `getUser()` called once → inline the query |
+| Unclear name          | Rename    | `x` → `userCount`                          |
+| Dead code             | Delete    | Unused function → remove                   |
+| Deep nesting          | Flatten   | if/if/if → early returns                   |
+| Redundant abstraction | Remove    | Wrapper that just calls wrapped            |
 
 ### Forbidden Actions
 
-| Action | Why Forbidden |
-|--------|---------------|
-| Add features | Scope creep |
-| Change public APIs | Breaks consumers |
-| Refactor unrelated code | Stay focused |
-| Subjective style changes | Not simplification |
-| "Improve" working code | If it works, leave it |
+| Action                   | Why Forbidden         |
+| ------------------------ | --------------------- |
+| Add features             | Scope creep           |
+| Change public APIs       | Breaks consumers      |
+| Refactor unrelated code  | Stay focused          |
+| Subjective style changes | Not simplification    |
+| "Improve" working code   | If it works, leave it |
 
 ### Process
 
@@ -392,14 +401,14 @@ echo "Captured cynic output to $DEST_FILE"
 
 ## Error States
 
-| Error | Agent | Detection | Response |
-|-------|-------|-----------|----------|
-| Timeout | catastrophiser | 30s without completion | Try fallback method |
-| Invalid JSON | Either | jq parse fails | Save raw, warn, continue |
-| Tests fail post-simplify | cynic | exit code != 0 | Revert last change |
-| Context exhaustion | Either | ACM warning | Output partial, mark incomplete |
-| Tool unavailable | catastrophiser | MCP error | Fall back to bash-only verification |
-| Server won't start | catastrophiser | Port not responding | Try test-only verification |
+| Error                    | Agent          | Detection              | Response                            |
+| ------------------------ | -------------- | ---------------------- | ----------------------------------- |
+| Timeout                  | catastrophiser | 30s without completion | Try fallback method                 |
+| Invalid JSON             | Either         | jq parse fails         | Save raw, warn, continue            |
+| Tests fail post-simplify | cynic          | exit code != 0         | Revert last change                  |
+| Context exhaustion       | Either         | ACM warning            | Output partial, mark incomplete     |
+| Tool unavailable         | catastrophiser | MCP error              | Fall back to bash-only verification |
+| Server won't start       | catastrophiser | Port not responding    | Try test-only verification          |
 
 ## State File Updates
 

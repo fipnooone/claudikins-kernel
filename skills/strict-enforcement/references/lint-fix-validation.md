@@ -6,14 +6,14 @@ How to safely validate that auto-fix didn't break code. Auto-fix is convenient b
 
 Auto-fix tools transform code automatically. Most fixes are safe, but some can change behaviour:
 
-| Fix Type | Risk Level | Example |
-|----------|------------|---------|
-| Formatting | None | Whitespace, semicolons |
-| Import sorting | None | Reorder imports |
-| Unused variable removal | Low | Remove `const x = 5;` |
-| Auto-type narrowing | Medium | Adding type assertions |
-| Code simplification | Medium | `!!value` → `Boolean(value)` |
-| Async/await conversion | High | Promise chains → async/await |
+| Fix Type                | Risk Level | Example                      |
+| ----------------------- | ---------- | ---------------------------- |
+| Formatting              | None       | Whitespace, semicolons       |
+| Import sorting          | None       | Reorder imports              |
+| Unused variable removal | Low        | Remove `const x = 5;`        |
+| Auto-type narrowing     | Medium     | Adding type assertions       |
+| Code simplification     | Medium     | `!!value` → `Boolean(value)` |
+| Async/await conversion  | High       | Promise chains → async/await |
 
 ## Validation Flow
 
@@ -44,7 +44,7 @@ Lint errors found
 │       │   │
 │       │   └── No →
 │       │       ├── Revert to pre-fix state
-│       │       └── STOP: [Manual fix] [Skip lint] [Abort]
+│       │       └── STOP: [Manual fix] [Accept caveated lint failure] [Abort]
 │       │
 │       └── Show diff of changes made
 │           └── Human can review what changed
@@ -132,7 +132,7 @@ git diff
 
 ```typescript
 // BEFORE
-import { SideEffectModule } from './side-effects';
+import { SideEffectModule } from "./side-effects";
 
 // AFTER (auto-fixed - import removed)
 // SideEffectModule's side effects no longer run!
@@ -147,12 +147,12 @@ import { SideEffectModule } from './side-effects';
 ```javascript
 // BEFORE
 function getData() {
-  return fetch('/api').then(r => r.json());
+  return fetch("/api").then((r) => r.json());
 }
 
 // AFTER (auto-fixed)
 async function getData() {
-  const r = await fetch('/api');
+  const r = await fetch("/api");
   return r.json();
 }
 ```
@@ -181,11 +181,11 @@ const name = user?.profile?.name;
 
 ```javascript
 // BEFORE
-const value = input || 'default';
+const value = input || "default";
 // 'default' if input is: false, 0, '', null, undefined
 
 // AFTER (auto-fixed)
-const value = input ?? 'default';
+const value = input ?? "default";
 // 'default' only if input is: null, undefined
 ```
 
@@ -197,12 +197,12 @@ const value = input ?? 'default';
 
 ```typescript
 // BEFORE (type error)
-const el = document.getElementById('app');
-el.innerHTML = 'Hello'; // Error: el might be null
+const el = document.getElementById("app");
+el.innerHTML = "Hello"; // Error: el might be null
 
 // AFTER (auto-fixed)
-const el = document.getElementById('app')!;
-el.innerHTML = 'Hello'; // No error, but crashes if el is null
+const el = document.getElementById("app")!;
+el.innerHTML = "Hello"; // No error, but crashes if el is null
 ```
 
 **Watch for:** Non-null assertions (`!`) that suppress valid errors.
@@ -215,10 +215,7 @@ el.innerHTML = 'Hello'; // No error, but crashes if el is null
   "auto_fix_applied": true,
   "pre_fix_errors": 5,
   "post_fix_errors": 0,
-  "files_modified": [
-    "src/utils.ts",
-    "src/auth.ts"
-  ],
+  "files_modified": ["src/utils.ts", "src/auth.ts"],
   "validation": {
     "lint_clean": true,
     "tests_pass": true,
@@ -234,14 +231,14 @@ el.innerHTML = 'Hello'; // No error, but crashes if el is null
 If validation fails:
 
 ```bash
-# Option 1: Git restore
-git checkout -- .
-
-# Option 2: Apply saved diff in reverse
+# Option 1: Apply saved diff in reverse
 git apply -R .claude/pre-lint-fix.diff
 
-# Option 3: Restore from backup
+# Option 2: Restore from backup
 cp .claude/pre-lint-fix/* src/
+
+# Option 3: Manually revert only the lint-fix edits shown in the saved diff
+# Do not use broad checkout/reset as an automatic rollback.
 ```
 
 ## Human Checkpoint
@@ -272,26 +269,26 @@ The non-null assertion on auth.ts:45 may suppress a valid error.
 
 These are always safe to auto-fix:
 
-| Pattern | Example |
-|---------|---------|
+| Pattern             | Example                       |
+| ------------------- | ----------------------------- |
 | Trailing whitespace | Remove spaces at end of lines |
-| Missing semicolons | Add `;` |
-| Quote style | `"` → `'` |
-| Import order | Sort alphabetically |
-| Trailing commas | Add/remove |
-| Indentation | Tabs ↔ spaces |
+| Missing semicolons  | Add `;`                       |
+| Quote style         | `"` → `'`                     |
+| Import order        | Sort alphabetically           |
+| Trailing commas     | Add/remove                    |
+| Indentation         | Tabs ↔ spaces                 |
 
 ## Risky Fix Patterns
 
 Review these before accepting:
 
-| Pattern | Risk |
-|---------|------|
+| Pattern                 | Risk                                  |
+| ----------------------- | ------------------------------------- |
 | Unused variable removal | Might remove intentional placeholders |
-| Type assertion addition | Might hide real errors |
-| Async conversion | Might change error handling |
-| Optional chaining | Might change falsy behaviour |
-| Nullish coalescing | Might change falsy behaviour |
+| Type assertion addition | Might hide real errors                |
+| Async conversion        | Might change error handling           |
+| Optional chaining       | Might change falsy behaviour          |
+| Nullish coalescing      | Might change falsy behaviour          |
 
 ## See Also
 

@@ -27,6 +27,8 @@ which actually isn't that great because it wakes your dog up at night, then you 
 
 claudikins-kernel applies SRE discipline to AI workflows. It enforces a strict 4-stage pipeline with **gates between each step**. You literally cannot skip verification. You cannot ship without the Cynic's approval.
 
+It targets both Claude Code and OpenClaude, with provider-agnostic workflow enforcement so the same outline → execute → verify → ship discipline can hold across Claude, Codex, and other providers.
+
 > **Constraint is freedom.** By preventing shortcuts, you get code that actually works.
 
 ---

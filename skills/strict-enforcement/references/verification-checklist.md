@@ -22,12 +22,12 @@ Before verification can begin, validate the execution state.
 
 ### Pre-Flight Checks
 
-| Check | How | Fail Action |
-|-------|-----|-------------|
-| Execute state exists | `[ -f .claude/execute-state.json ]` | Exit 2: "Run claudikins-kernel:execute first" |
-| Execute completed | `jq -r '.status' == "completed"` | Exit 2: "claudikins-kernel:execute incomplete" |
-| On task branch | `git branch --show-current` | Warning: verify from correct branch |
-| Clean working tree | `git status --porcelain` | Warning: uncommitted changes |
+| Check                | How                                 | Fail Action                                    |
+| -------------------- | ----------------------------------- | ---------------------------------------------- |
+| Execute state exists | `[ -f .claude/execute-state.json ]` | Exit 2: "Run claudikins-kernel:execute first"  |
+| Execute completed    | `jq -r '.status' == "completed"`    | Exit 2: "claudikins-kernel:execute incomplete" |
+| On task branch       | `git branch --show-current`         | Warning: verify from correct branch            |
+| Clean working tree   | `git status --porcelain`            | Warning: uncommitted changes                   |
 
 ## Phase 1: Automated Quality Checks
 
@@ -35,13 +35,13 @@ Before verification can begin, validate the execution state.
 
 **Detection:**
 
-| Stack | Test Command | Detection Pattern |
-|-------|--------------|-------------------|
-| Node.js | `npm test` | package.json scripts.test |
-| Python | `pytest` | pytest.ini, pyproject.toml |
-| Rust | `cargo test` | Cargo.toml |
-| Go | `go test ./...` | *_test.go files |
-| Java | `mvn test` | pom.xml |
+| Stack   | Test Command    | Detection Pattern          |
+| ------- | --------------- | -------------------------- |
+| Node.js | `npm test`      | package.json scripts.test  |
+| Python  | `pytest`        | pytest.ini, pyproject.toml |
+| Rust    | `cargo test`    | Cargo.toml                 |
+| Go      | `go test ./...` | \*\_test.go files          |
+| Java    | `mvn test`      | pom.xml                    |
 
 **Checklist:**
 
@@ -88,12 +88,12 @@ Test fails?
 
 **Detection:**
 
-| Stack | Lint Command | Detection Pattern |
-|-------|--------------|-------------------|
-| Node.js | `npm run lint` | package.json scripts.lint |
-| Python | `ruff check .` | ruff.toml, pyproject.toml |
-| Rust | `cargo clippy` | Cargo.toml |
-| Go | `golangci-lint run` | .golangci.yml |
+| Stack   | Lint Command        | Detection Pattern         |
+| ------- | ------------------- | ------------------------- |
+| Node.js | `npm run lint`      | package.json scripts.lint |
+| Python  | `ruff check .`      | ruff.toml, pyproject.toml |
+| Rust    | `cargo clippy`      | Cargo.toml                |
+| Go      | `golangci-lint run` | .golangci.yml             |
 
 **Checklist:**
 
@@ -136,11 +136,11 @@ See [lint-fix-validation.md](lint-fix-validation.md) for validating auto-fix saf
 
 **Detection:**
 
-| Stack | Type Command | Detection Pattern |
-|-------|--------------|-------------------|
-| TypeScript | `tsc --noEmit` | tsconfig.json |
-| Python | `mypy .` | mypy.ini, pyproject.toml |
-| Rust | `cargo check` | Cargo.toml (always) |
+| Stack      | Type Command   | Detection Pattern        |
+| ---------- | -------------- | ------------------------ |
+| TypeScript | `tsc --noEmit` | tsconfig.json            |
+| Python     | `mypy .`       | mypy.ini, pyproject.toml |
+| Rust       | `cargo check`  | Cargo.toml (always)      |
 
 **Checklist:**
 
@@ -167,11 +167,11 @@ Only run if build is configured and relevant.
 
 **Detection:**
 
-| Stack | Build Command | When Required |
-|-------|---------------|---------------|
-| Node.js | `npm run build` | If scripts.build exists |
-| Rust | `cargo build --release` | If deploying binary |
-| Go | `go build ./...` | If deploying binary |
+| Stack   | Build Command           | When Required           |
+| ------- | ----------------------- | ----------------------- |
+| Node.js | `npm run build`         | If scripts.build exists |
+| Rust    | `cargo build --release` | If deploying binary     |
+| Go      | `go build ./...`        | If deploying binary     |
 
 **Checklist:**
 
@@ -214,7 +214,11 @@ Detect project type:
     "port": 3000,
     "pages_checked": [
       { "path": "/", "status": 200, "screenshot": ".claude/evidence/home.png" },
-      { "path": "/login", "status": 200, "screenshot": ".claude/evidence/login.png" }
+      {
+        "path": "/login",
+        "status": 200,
+        "screenshot": ".claude/evidence/login.png"
+      }
     ],
     "console_errors": []
   }
@@ -236,9 +240,24 @@ Detect project type:
   "project_type": "api",
   "verification": {
     "endpoints_tested": [
-      { "method": "GET", "path": "/api/users", "status": 200, "body_valid": true },
-      { "method": "POST", "path": "/api/auth", "status": 200, "body_valid": true },
-      { "method": "GET", "path": "/api/invalid", "status": 404, "body_valid": true }
+      {
+        "method": "GET",
+        "path": "/api/users",
+        "status": 200,
+        "body_valid": true
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth",
+        "status": 200,
+        "body_valid": true
+      },
+      {
+        "method": "GET",
+        "path": "/api/invalid",
+        "status": 404,
+        "body_valid": true
+      }
     ]
   }
 }
@@ -259,7 +278,11 @@ Detect project type:
   "project_type": "cli",
   "verification": {
     "commands_tested": [
-      { "command": "mycli --help", "exit_code": 0, "stdout_contains": "Usage:" },
+      {
+        "command": "mycli --help",
+        "exit_code": 0,
+        "stdout_contains": "Usage:"
+      },
       { "command": "mycli process file.txt", "exit_code": 0 },
       { "command": "mycli process nonexistent.txt", "exit_code": 1 }
     ]
@@ -284,6 +307,7 @@ Detect project type:
 ## Phase 3: Code Simplification
 
 **Prerequisites:**
+
 - Phase 1: All automated checks PASS
 - Phase 2: Output verification PASS
 - Human approves: "Run cynic for polish pass?"
@@ -299,21 +323,21 @@ Detect project type:
 
 ### What cynic Should Change
 
-| Target | Action |
-|--------|--------|
-| Single-use helpers | Inline them |
-| Unclear names | Rename for clarity |
-| Dead code | Delete it |
-| Deep nesting | Flatten with early returns |
-| Redundant abstraction | Remove indirection |
+| Target                | Action                     |
+| --------------------- | -------------------------- |
+| Single-use helpers    | Inline them                |
+| Unclear names         | Rename for clarity         |
+| Dead code             | Delete it                  |
+| Deep nesting          | Flatten with early returns |
+| Redundant abstraction | Remove indirection         |
 
 ### What cynic Must NOT Change
 
-| Forbidden | Why |
-|-----------|-----|
-| Public APIs | Breaks consumers |
-| New features | Scope creep |
-| Unrelated code | Stay focused |
+| Forbidden        | Why                          |
+| ---------------- | ---------------------------- |
+| Public APIs      | Breaks consumers             |
+| New features     | Scope creep                  |
+| Unrelated code   | Stay focused                 |
 | Working patterns | If it works, don't "improve" |
 
 ## Phase 5: Human Checkpoint
@@ -353,11 +377,11 @@ Tests: Still passing
 Caveats
 ───────
 • 3 lint warnings (style only)
-• Flaky test detected in auth.test.ts (accepted)
+• Flaky test detected in auth.test.ts (recorded; no clean PASS)
 
 ═══════════════════════════════════════════════════
 
-[Ready to Ship] [Needs Work] [Accept with Caveats]
+[Ready to Ship] [Needs Work] [Record Caveats - Ship Locked]
 ```
 
 ### Decision Recording
@@ -366,10 +390,13 @@ Caveats
 {
   "human_checkpoint": {
     "prompted_at": "2026-01-16T11:15:00Z",
-    "decision": "ready_to_ship",
-    "caveats": ["3 lint warnings accepted"],
+    "decision": "accept_with_caveats",
+    "caveats": ["3 lint warnings recorded; flaky test needs follow-up"],
     "reviewer": "human"
-  }
+  },
+  "verification_state": "caveated",
+  "all_checks_passed": false,
+  "unlock_ship": false
 }
 ```
 
@@ -380,10 +407,17 @@ Caveats
 After human approves, generate integrity manifest:
 
 ```bash
+sha256_cmd() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
 find . \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' \
   -o -name '*.py' -o -name '*.rs' -o -name '*.go' \) \
   -not -path '*/node_modules/*' -not -path '*/.git/*' \
-  | sort | xargs sha256sum > .claude/verify-manifest.txt
+  | sort | while IFS= read -r file; do sha256_cmd "$file"; done > .claude/verify-manifest.txt
 ```
 
 This allows claudikins-kernel:ship to detect post-verification modifications.
@@ -393,6 +427,7 @@ This allows claudikins-kernel:ship to detect post-verification modifications.
 ```json
 {
   "session_id": "verify-2026-01-16-1100",
+  "verification_state": "pass",
   "all_checks_passed": true,
   "human_checkpoint": {
     "decision": "ready_to_ship"
@@ -405,13 +440,13 @@ This allows claudikins-kernel:ship to detect post-verification modifications.
 
 ## Quick Reference
 
-| Phase | What | Evidence |
-|-------|------|----------|
-| Pre-flight | Execute completed | execute-state.json |
-| 1a | Tests pass | Exit code, count |
-| 1b | Lint clean | Exit code, error count |
-| 1c | Types check | Exit code |
-| 2 | See it working | Screenshots, curl, CLI output |
-| 3 | Polish (optional) | Diff, test results |
-| 5 | Human approves | Decision in state |
-| Post | Manifest generated | SHA256 hashes |
+| Phase      | What               | Evidence                      |
+| ---------- | ------------------ | ----------------------------- |
+| Pre-flight | Execute completed  | execute-state.json            |
+| 1a         | Tests pass         | Exit code, count              |
+| 1b         | Lint clean         | Exit code, error count        |
+| 1c         | Types check        | Exit code                     |
+| 2          | See it working     | Screenshots, curl, CLI output |
+| 3          | Polish (optional)  | Diff, test results            |
+| 5          | Human approves     | Decision in state             |
+| Post       | Manifest generated | SHA256 hashes                 |

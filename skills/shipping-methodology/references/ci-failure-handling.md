@@ -29,7 +29,7 @@ CI Status
 ✗ build (failed after 3m 45s)
 ⏳ deploy-preview (running)
 
-[View logs] [Re-run failed] [Merge anyway] [Abort]
+[View logs] [Re-run failed] [Request explicit failed-CI override] [Abort]
 ```
 
 ## Failure Types
@@ -44,14 +44,15 @@ Failed tests:
   ✗ should reject expired token
   ✗ should handle malformed JWT
 
-[View test output] [Fix locally] [Re-run tests] [Skip CI]
+[View test output] [Fix locally] [Re-run tests] [Request explicit CI caveat override]
 ```
 
 **Recovery:**
+
 1. View test output to understand failure
 2. Fix locally and push
 3. Re-run CI
-4. Or skip CI (if flaky/environment issue)
+4. If CI is flaky or blocked by infrastructure, use the explicit caveated ship override path; do not treat it as a clean merge
 
 ### Lint Failures
 
@@ -62,10 +63,11 @@ Lint errors:
 - src/auth/middleware.ts:45 - Unexpected console statement
 - src/api/routes.ts:12 - Missing semicolon
 
-[View lint output] [Auto-fix] [Fix locally] [Skip CI]
+[View lint output] [Auto-fix] [Fix locally] [Abort - lint must be fixed]
 ```
 
 **Recovery:**
+
 ```bash
 # Auto-fix lint issues
 npm run lint -- --fix
@@ -87,6 +89,7 @@ error TS2345: Argument of type 'string' is not assignable to parameter of type '
 ```
 
 **Recovery:**
+
 1. Fix type error locally
 2. Run build locally to verify
 3. Push fix
@@ -108,6 +111,7 @@ Possible causes:
 ```
 
 **Recovery:**
+
 1. Check for infinite loops
 2. Ensure mocks are in place
 3. Check database connectivity
@@ -122,13 +126,14 @@ Error: Runner ran out of disk space
 
 This is not a code issue.
 
-[Re-run] [Contact admin] [Merge anyway]
+[Re-run] [Contact admin] [Request explicit infrastructure-CI override]
 ```
 
 **Recovery:**
+
 - Re-run job (usually transient)
 - If persistent, contact CI admin
-- Consider merging anyway if certain code is correct
+- If release must proceed despite an infrastructure-only CI failure, use the explicit caveated ship override path with human approval and visible caveat propagation
 
 ## Polling CI Status
 
@@ -164,38 +169,35 @@ while true; do
 done
 ```
 
-## Skip CI Options
+## Explicit Caveated CI Override Options
 
-### When to Skip CI
+### When an Override May Be Considered
 
-| Scenario | Skip OK? | Reason |
-|----------|----------|--------|
-| Flaky test | Maybe | If known flaky, skip with caveat |
-| Timeout | Maybe | If transient infrastructure issue |
-| Lint error | No | Should be fixable |
-| Test failure | No | Code might be broken |
-| Build failure | No | Code definitely broken |
-| Infrastructure | Yes | Not code-related |
+| Scenario         | Override OK? | Reason                                              |
+| ---------------- | ------------ | --------------------------------------------------- |
+| Known flaky test | Maybe        | Only with rerun evidence and caveated approval      |
+| Timeout          | Maybe        | Only if transient infrastructure issue is evidenced |
+| Lint error       | No           | Should be fixable                                   |
+| Test failure     | No           | Code might be broken                                |
+| Build failure    | No           | Code definitely broken                              |
+| Infrastructure   | Maybe        | Only if clearly not code-related and propagated     |
 
-### How to Skip
+### How to Request an Override
 
 ```
-CI failed but you want to proceed.
+CI failed but appears infrastructure-only or known flaky.
 
-WARNING: Skipping CI means merging untested code.
+WARNING: This is not a clean PASS. Normal shipping remains blocked unless the caveated ship override is explicitly approved.
 
 Are you sure?
 
-[Merge without CI] [Wait for fix] [Abort]
+[Approve Caveated CI Override] [Wait for fix] [Abort]
 ```
 
-If skipping:
-```bash
-# Merge without waiting for checks
-gh pr merge 42 --admin --merge
-```
+If approved, record caveat and route through the caveated ship override path. Do not use admin merge commands as a default example.
 
 Record caveat:
+
 ```json
 {
   "shipped_with_caveats": true,
@@ -233,10 +235,11 @@ This test appears to be flaky:
 - src/auth/__tests__/middleware.test.ts
   "should handle concurrent requests"
 
-[Accept with flaky test caveat] [Fix test] [Abort]
+[Record flaky-test caveat - ship remains locked] [Fix test] [Abort]
 ```
 
 **Recording flaky tests:**
+
 ```json
 {
   "flaky_tests": [
@@ -257,7 +260,7 @@ If jobs consistently timeout:
 # .github/workflows/ci.yml
 jobs:
   test:
-    timeout-minutes: 60  # Increase from default
+    timeout-minutes: 60 # Increase from default
 ```
 
 ```

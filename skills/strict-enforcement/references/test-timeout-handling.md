@@ -4,11 +4,11 @@ What to do when tests hang or take too long. This is a common failure mode that 
 
 ## Timeout Thresholds
 
-| Context | Default Timeout | Maximum |
-|---------|-----------------|---------|
-| Individual test | 5s | 30s |
-| Test suite | 5 min | 15 min |
-| Single test file | 60s | 5 min |
+| Context          | Default Timeout | Maximum |
+| ---------------- | --------------- | ------- |
+| Individual test  | 5s              | 30s     |
+| Test suite       | 5 min           | 15 min  |
+| Single test file | 60s             | 5 min   |
 
 ## Detecting Timeouts
 
@@ -24,26 +24,29 @@ Test suite hangs:
 
 ### Detection Command
 
-```bash
-# Run tests with timeout
-timeout 300 npm test
+Use the harness' command timeout when available. In shell examples, prefer GNU `timeout`, `gtimeout` on macOS with coreutils, or the runtime's built-in timeout parameter.
 
-# Exit code 124 = timeout
-if [ $? -eq 124 ]; then
-  echo "Test suite timed out after 5 minutes"
+```bash
+TIMEOUT_CMD="timeout"
+command -v timeout >/dev/null 2>&1 || TIMEOUT_CMD="gtimeout"
+if command -v "$TIMEOUT_CMD" >/dev/null 2>&1; then
+  "$TIMEOUT_CMD" 300 npm test
+else
+  echo "No bounded timeout primitive available; mark test verification blocked/caveated instead of running unbounded."
+  exit 2
 fi
 ```
 
 ## Common Causes
 
-| Cause | Symptoms | Solution |
-|-------|----------|----------|
-| Infinite loop | 100% CPU, no output | Find loop, add termination condition |
-| Deadlock | 0% CPU, stuck | Check async/await, mutex usage |
-| Missing callback | Test never completes | Ensure done() called or promise resolved |
-| External dependency | Waiting for network | Mock external services |
-| Database connection | Stuck on connect | Check connection string, mock DB |
-| File system | Waiting on I/O | Check file paths, permissions |
+| Cause               | Symptoms             | Solution                                 |
+| ------------------- | -------------------- | ---------------------------------------- |
+| Infinite loop       | 100% CPU, no output  | Find loop, add termination condition     |
+| Deadlock            | 0% CPU, stuck        | Check async/await, mutex usage           |
+| Missing callback    | Test never completes | Ensure done() called or promise resolved |
+| External dependency | Waiting for network  | Mock external services                   |
+| Database connection | Stuck on connect     | Check connection string, mock DB         |
+| File system         | Waiting on I/O       | Check file paths, permissions            |
 
 ## Response Flow
 
@@ -51,7 +54,7 @@ fi
 Test suite times out
 │
 ├── Kill the process
-│   └── timeout --signal=KILL 10 npm test
+│   └── use the runtime's timeout/termination mechanism for the hung test process
 │
 ├── Identify which test hung
 │   ├── Run tests in verbose mode
@@ -60,12 +63,12 @@ Test suite times out
 │
 ├── Once identified:
 │   ├── Is it a known flaky test?
-│   │   └── Yes → [Skip it] [Fix it] [Quarantine]
+│   │   └── Yes → [Fix it] [Quarantine with caveat]
 │   └── No →
 │       ├── Can we fix quickly?
 │       │   └── Yes → Fix and re-run
 │       └── No →
-│           └── STOP: [Skip test] [Abort verification]
+│           └── STOP: [Accept caveated test timeout] [Abort verification]
 │
 └── Record in state
     └── "test_timeout": { "file": "...", "resolution": "..." }
@@ -125,9 +128,9 @@ afterEach(() => {
 
 ```javascript
 // BAD - test completes before async operation
-test('fetches user', () => {
-  fetchUser(1).then(user => {
-    expect(user.name).toBe('Alice');
+test("fetches user", () => {
+  fetchUser(1).then((user) => {
+    expect(user.name).toBe("Alice");
   });
 });
 ```
@@ -136,15 +139,15 @@ test('fetches user', () => {
 
 ```javascript
 // GOOD - async/await
-test('fetches user', async () => {
+test("fetches user", async () => {
   const user = await fetchUser(1);
-  expect(user.name).toBe('Alice');
+  expect(user.name).toBe("Alice");
 });
 
 // OR - return promise
-test('fetches user', () => {
-  return fetchUser(1).then(user => {
-    expect(user.name).toBe('Alice');
+test("fetches user", () => {
+  return fetchUser(1).then((user) => {
+    expect(user.name).toBe("Alice");
   });
 });
 ```
@@ -155,9 +158,9 @@ test('fetches user', () => {
 
 ```javascript
 // BAD - actually calls Stripe
-test('creates payment', async () => {
+test("creates payment", async () => {
   const result = await createPayment(100);
-  expect(result.status).toBe('succeeded');
+  expect(result.status).toBe("succeeded");
 });
 ```
 
@@ -165,12 +168,12 @@ test('creates payment', async () => {
 
 ```javascript
 // GOOD - mocked
-jest.mock('../stripe');
+jest.mock("../stripe");
 
-test('creates payment', async () => {
-  stripe.createCharge.mockResolvedValue({ status: 'succeeded' });
+test("creates payment", async () => {
+  stripe.createCharge.mockResolvedValue({ status: "succeeded" });
   const result = await createPayment(100);
-  expect(result.status).toBe('succeeded');
+  expect(result.status).toBe("succeeded");
 });
 ```
 
@@ -183,7 +186,7 @@ test('creates payment', async () => {
 ```javascript
 // Use in-memory database for tests
 beforeAll(async () => {
-  await db.connect(process.env.TEST_DATABASE_URL || 'sqlite::memory:');
+  await db.connect(process.env.TEST_DATABASE_URL || "sqlite::memory:");
 });
 
 afterAll(async () => {
@@ -197,7 +200,7 @@ afterAll(async () => {
 
 ```javascript
 // BAD - promise never resolves
-test('waits forever', async () => {
+test("waits forever", async () => {
   await new Promise(() => {}); // Never resolves
 });
 ```
@@ -215,7 +218,7 @@ module.exports = {
 };
 
 // Or per-test:
-test('slow test', async () => {
+test("slow test", async () => {
   // ...
 }, 30000); // 30 second timeout for this test
 ```

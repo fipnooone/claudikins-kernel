@@ -47,17 +47,28 @@ When the project involves multiple interconnected services.
 **Approach:**
 
 ```bash
-# Start all services
-docker-compose up -d
+# Runtime-specific example: prefer docker compose v2; fall back to docker-compose v1 only when available.
+compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    docker compose "$@"
+  elif command -v docker-compose >/dev/null 2>&1; then
+    docker-compose "$@"
+  else
+    echo "No Docker Compose command available" >&2
+    return 127
+  fi
+}
+
+compose_cmd up -d
 
 # Wait for health checks
-docker-compose ps --filter "health=healthy"
+compose_cmd ps --filter "health=healthy"
 
 # Run verification against exposed ports
 curl localhost:3000/health
 
 # Capture logs as evidence
-docker-compose logs --tail=50 > .claude/evidence/docker-logs.txt
+compose_cmd logs --tail=50 > .claude/evidence/docker-logs.txt
 ```
 
 **Timeout consideration:** Allow extra time for container startup (60s+ vs 30s).
@@ -160,11 +171,11 @@ When the app requires authentication to verify.
 
 **Options:**
 
-| Option | When to Use |
-|--------|-------------|
-| Mock OAuth provider | Development/CI |
-| Skip OAuth verification | Note as caveat |
-| Manual verification | Document steps for human |
+| Option                  | When to Use              |
+| ----------------------- | ------------------------ |
+| Mock OAuth provider     | Development/CI           |
+| Skip OAuth verification | Note as caveat           |
+| Manual verification     | Document steps for human |
 
 **Evidence when skipped:**
 
@@ -200,13 +211,13 @@ WebSockets, Server-Sent Events, and other real-time patterns.
 
 ```typescript
 // In catastrophiser via tool-executor
-const ws = new WebSocket('ws://localhost:3000/ws');
+const ws = new WebSocket("ws://localhost:3000/ws");
 
-ws.on('open', () => {
-  ws.send(JSON.stringify({ type: 'ping' }));
+ws.on("open", () => {
+  ws.send(JSON.stringify({ type: "ping" }));
 });
 
-ws.on('message', (data) => {
+ws.on("message", (data) => {
   const response = JSON.parse(data);
   // Verify response
   ws.close();
@@ -228,12 +239,12 @@ curl -N localhost:3000/events | head -10 > .claude/evidence/sse-events.txt
 
 **Options:**
 
-| Option | Approach |
-|--------|----------|
-| Trigger manually | If endpoint exists to trigger |
-| Reduce interval | Temporarily set to 1s for verification |
-| Mock time | If framework supports |
-| Code review only | Verify logic, not timing |
+| Option           | Approach                               |
+| ---------------- | -------------------------------------- |
+| Trigger manually | If endpoint exists to trigger          |
+| Reduce interval  | Temporarily set to 1s for verification |
+| Mock time        | If framework supports                  |
+| Code review only | Verify logic, not timing               |
 
 **Evidence:**
 
@@ -300,12 +311,12 @@ When the app calls external APIs.
 
 **When mocking not available:**
 
-| Scenario | Approach |
-|----------|----------|
-| API has sandbox | Use sandbox credentials |
-| API is read-only | Safe to call real API |
+| Scenario             | Approach                 |
+| -------------------- | ------------------------ |
+| API has sandbox      | Use sandbox credentials  |
+| API is read-only     | Safe to call real API    |
 | API has side effects | Skip, document as caveat |
-| API costs money | Skip, document as caveat |
+| API costs money      | Skip, document as caveat |
 
 **Evidence when skipped:**
 
@@ -447,9 +458,11 @@ npx playwright screenshot localhost:3000 .claude/evidence/ci-home.png
 
 ### Port Conflicts
 
+Use a readiness probe appropriate to the runtime, such as HTTP polling with `curl` or the harness' service health check. Avoid assuming `nc` is installed.
+
 ```bash
-# Check if port available
-nc -z localhost 3000 && echo "Port in use" || echo "Port available"
+# Check if the app responds on the port
+curl -fsS http://localhost:3000 >/dev/null 2>&1 && echo "Port in use" || echo "Port available"
 
 # Use random port
 PORT=$(shuf -i 3000-4000 -n 1)
@@ -460,11 +473,11 @@ npm run dev -- --port $PORT
 
 CI environments are often slower:
 
-| Environment | Default Timeout | Recommended |
-|-------------|-----------------|-------------|
-| Local | 30s | 30s |
-| CI (standard) | 30s | 60s |
-| CI (under load) | 30s | 120s |
+| Environment     | Default Timeout | Recommended |
+| --------------- | --------------- | ----------- |
+| Local           | 30s             | 30s         |
+| CI (standard)   | 30s             | 60s         |
+| CI (under load) | 30s             | 120s        |
 
 ## See Also
 

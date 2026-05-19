@@ -37,6 +37,10 @@ Never claim code works without seeing it work. Tests passing is not enough. Clau
 2. **Human checkpoint** - No auto-shipping. Human reviews evidence and decides.
 3. **Exit code 2 gates** - Verification failures block claudikins-kernel:ship. No exceptions.
 
+## Verification Failure Rules
+
+Verification PASS requires evidence. Treat invalid JSON, missing `status`/`evidence`, or two repeated tool validation errors as failed verification. Do not set or recommend `unlock_ship` without evidence and human approval.
+
 ## Verification Phases
 
 ### Phase 1: Automated Quality Checks
@@ -56,10 +60,10 @@ Run the automated checks first. Fast feedback.
 Test fails?
 ├── Re-run failed tests
 ├── Pass 2nd time?
-│   └── Yes → STOP: [Accept flakiness] [Fix tests] [Abort]
+│   └── Yes → STOP: [Record flakiness caveat - no clean PASS] [Fix tests] [Abort]
 └── Fail 2nd time?
     ├── Run isolated
-    └── Still fail? → STOP: [Fix] [Skip] [Abort]
+    └── Still fail? → STOP: [Fix] [Record blocked failure - no clean PASS] [Abort]
 ```
 
 ### Phase 2: Output Verification (catastrophiser)
@@ -105,9 +109,9 @@ After verification passes, optionally run cynic for polish.
 
 **If tests fail after simplification:**
 
-- Log failure reasons
+- Record failure reasons and evidence
 - Show human
-- Proceed anyway (A-5) with caveat
+- If human accepts, mark verification `caveated` with `unlock_ship: false`; do not proceed as normal PASS
 
 See [cynic-rollback.md](references/cynic-rollback.md) for recovery patterns.
 
@@ -119,7 +123,7 @@ If stuck during verification:
 Is mcp__claudikins-klaus available? (E-16)
 ├── No →
 │   Offer: [Manual review] [Ask Claude differently] (E-17)
-│   Fallback: [Accept with uncertainty] [Max retries, abort] (E-18)
+│   Fallback: [Record uncertainty - no clean PASS] [Max retries, abort] (E-18)
 └── Yes →
     Spawn klaus via SubagentStop hook
 ```
@@ -141,25 +145,25 @@ Evidence:
 - API test: POST /api/auth → 200 OK
 - CLI test: mycli --help → exit 0
 
-[Ready to Ship] [Needs Work] [Accept with Caveats]
+[Ready to Ship] [Needs Work] [Record Caveats - Ship Locked]
 ```
 
-Human decides. If approved, set `unlock_ship = true`.
+Human decides. If clean evidence is approved, set `verification_state: "pass"` and `unlock_ship = true`. If caveats are recorded, set `verification_state: "caveated"`, keep `unlock_ship = false`, and route through the separate caveated ship override path.
 
 ## Rationalizations to Resist
 
 Agents under pressure find excuses. These are all violations:
 
-| Excuse                                     | Reality                                                               |
-| ------------------------------------------ | --------------------------------------------------------------------- |
-| "Tests pass, that's good enough"           | Tests aren't enough. SEE it working. Screenshots, curl, output.       |
-| "I'll verify after shipping"               | Verify BEFORE ship. That's the whole point.                           |
-| "The type checker caught everything"       | Types don't catch runtime issues. Get evidence.                       |
-| "Screenshot failed but it probably works"  | "Probably" isn't evidence. Fix the screenshot or use fallback.        |
-| "Human checkpoint is just a formality"     | Human checkpoint is the gate. No auto-shipping.                       |
-| "Code review is enough for this change"    | Code review is last resort fallback. Try harder.                      |
-| "Tests are flaky, I'll ignore the failure" | Flaky tests hide real failures. Fix or explicitly accept with caveat. |
-| "Exit code 2 is too strict"                | Exit code 2 exists to block bad ships. Pass properly.                 |
+| Excuse                                     | Reality                                                                                                   |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| "Tests pass, that's good enough"           | Tests aren't enough. SEE it working. Screenshots, curl, output.                                           |
+| "I'll verify after shipping"               | Verify BEFORE ship. That's the whole point.                                                               |
+| "The type checker caught everything"       | Types don't catch runtime issues. Get evidence.                                                           |
+| "Screenshot failed but it probably works"  | "Probably" isn't evidence. Fix the screenshot or use fallback.                                            |
+| "Human checkpoint is just a formality"     | Human checkpoint is the gate. No auto-shipping.                                                           |
+| "Code review is enough for this change"    | Code review is last resort fallback. Try harder.                                                          |
+| "Tests are flaky, I'll ignore the failure" | Flaky tests hide real failures. Fix them or record a caveated state that does not unlock normal shipping. |
+| "Exit code 2 is too strict"                | Exit code 2 exists to block bad ships. Pass properly.                                                     |
 
 **All of these mean: Get evidence. Human decides. No shortcuts.**
 
@@ -198,11 +202,18 @@ fi
 
 **File Manifest (C-6):**
 
-At verification completion, generate SHA256 hashes of all source files:
+At verification completion, generate hashes of all source files with a portable SHA-256 command:
 
 ```bash
+sha256_cmd() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
 find . \( -name '*.ts' -o -name '*.py' -o -name '*.rs' \) \
-  | xargs sha256sum > .claude/verify-manifest.txt
+  | while IFS= read -r file; do sha256_cmd "$file"; done > .claude/verify-manifest.txt
 ```
 
 This lets claudikins-kernel:ship detect if code was modified after verification.

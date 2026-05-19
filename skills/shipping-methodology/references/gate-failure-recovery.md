@@ -6,13 +6,13 @@ Recovering when ship-init.sh gate check fails.
 
 The gate can fail for several reasons:
 
-| Failure | Error Message | Recovery |
-|---------|---------------|----------|
-| No verify state | "claudikins-kernel:verify has not been run" | Run claudikins-kernel:verify first |
-| Not unlocked | "claudikins-kernel:verify did not pass or was not approved" | Complete claudikins-kernel:verify |
-| Commit mismatch | "Code changed since verification" | Re-run claudikins-kernel:verify |
-| Manifest mismatch | "Source files changed after verification" | Re-run claudikins-kernel:verify |
-| Corrupted state | "verify-state.json corrupted" | Re-run claudikins-kernel:verify |
+| Failure           | Error Message                                               | Recovery                           |
+| ----------------- | ----------------------------------------------------------- | ---------------------------------- |
+| No verify state   | "claudikins-kernel:verify has not been run"                 | Run claudikins-kernel:verify first |
+| Not unlocked      | "claudikins-kernel:verify did not pass or was not approved" | Complete claudikins-kernel:verify  |
+| Commit mismatch   | "Code changed since verification"                           | Re-run claudikins-kernel:verify    |
+| Manifest mismatch | "Source files changed after verification"                   | Re-run claudikins-kernel:verify    |
+| Corrupted state   | "verify-state.json corrupted"                               | Re-run claudikins-kernel:verify    |
 
 ## Recovery Flows
 
@@ -27,6 +27,7 @@ Run claudikins-kernel:verify before claudikins-kernel:ship
 ```
 
 **Recovery:**
+
 ```bash
 # Run verification
 claudikins-kernel:verify
@@ -50,6 +51,7 @@ Current verify state:
 ```
 
 **Recovery:**
+
 ```bash
 # Resume verification for approval
 claudikins-kernel:verify --resume
@@ -75,11 +77,13 @@ Changes since verification:
 ```
 
 **This happens when:**
+
 - Additional commits made after claudikins-kernel:verify
 - Branch rebased after claudikins-kernel:verify
 - Merge from main pulled in changes
 
 **Recovery:**
+
 ```bash
 # Option 1: Re-verify current state
 claudikins-kernel:verify
@@ -107,23 +111,24 @@ Modified files:
 ```
 
 **This happens when:**
+
 - Files edited after claudikins-kernel:verify
 - Auto-formatter ran after claudikins-kernel:verify
 - IDE modified files
 
 **Recovery:**
+
 ```bash
 # Check what changed
 git status
 git diff
 
-# Option 1: Commit changes and re-verify
-git add .
-git commit -m "chore: post-verify fixes"
+# Recovery requires re-verification
+# Option 1: Keep changes, then re-run verification before shipping
 claudikins-kernel:verify
 
-# Option 2: Discard changes
-git checkout -- .
+# Option 2: Manually revert only the known post-verify edits, then restart ship
+# Do not use broad checkout/reset in the shipping workflow.
 claudikins-kernel:ship
 ```
 
@@ -138,11 +143,13 @@ The verification state file is not valid JSON.
 ```
 
 **This happens when:**
+
 - Disk write interrupted
 - Manual editing broke JSON
 - Concurrent modification
 
 **Recovery:**
+
 ```bash
 # Option 1: Re-run verification from scratch
 rm .claude/verify-state.json
@@ -174,15 +181,16 @@ jq '.verified_commit_sha' .claude/verify-state.json
 ### Check Code Integrity
 
 ```bash
-# Compare commits
-VERIFY_COMMIT=$(jq -r '.verified_commit_sha' .claude/verify-state.json)
-CURRENT_COMMIT=$(git rev-parse HEAD)
-echo "Verified: $VERIFY_COMMIT"
-echo "Current:  $CURRENT_COMMIT"
+sha256_cmd() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
 
-# Compare manifests
 VERIFY_MANIFEST=$(jq -r '.verified_manifest' .claude/verify-state.json)
-CURRENT_MANIFEST=$(sha256sum .claude/verify-manifest.txt | cut -d' ' -f1)
+CURRENT_MANIFEST=$(sha256_cmd .claude/verify-manifest.txt | cut -d' ' -f1)
 echo "Verified: $VERIFY_MANIFEST"
 echo "Current:  $CURRENT_MANIFEST"
 ```
@@ -190,11 +198,17 @@ echo "Current:  $CURRENT_MANIFEST"
 ### Regenerate Manifest
 
 ```bash
-# Regenerate file manifest
+sha256_cmd() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
 find . \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \
   -o -name '*.py' -o -name '*.rs' -o -name '*.go' \) \
   -not -path '*/node_modules/*' -not -path '*/.git/*' \
-  | sort | xargs sha256sum > .claude/verify-manifest.txt
+  | sort | while IFS= read -r file; do sha256_cmd "$file"; done > .claude/verify-manifest.txt
 ```
 
 ## Prevention
@@ -227,6 +241,7 @@ claudikins-kernel:verify
 ```
 
 Don't:
+
 ```
 claudikins-kernel:verify
   └── Human approves
@@ -236,28 +251,11 @@ claudikins-kernel:verify
 
 ## Manual Override
 
-In emergencies, if you're certain code is correct:
+There is no manual state-patching override. If ship gate state is missing, corrupt, mismatched, skipped, failed, or caveated without explicit human approval, re-run `claudikins-kernel:verify` or abort. Do not edit `.claude/verify-state.json` or manifest hashes to make shipping pass.
 
-```bash
-# Reset verify state (DANGEROUS)
-jq '.unlock_ship = true | .verified_commit_sha = "'$(git rev-parse HEAD)'"' \
-  .claude/verify-state.json > tmp && mv tmp .claude/verify-state.json
+**Never:**
 
-# Regenerate manifest
-# ... (see above)
-
-# Update manifest hash
-NEW_HASH=$(sha256sum .claude/verify-manifest.txt | cut -d' ' -f1)
-jq --arg h "$NEW_HASH" '.verified_manifest = $h' \
-  .claude/verify-state.json > tmp && mv tmp .claude/verify-state.json
-```
-
-**Use only when:**
-- You understand why gate failed
-- You've verified changes are safe
-- Re-running claudikins-kernel:verify is impractical
-
-**Never use to:**
 - Skip actual verification
 - Ship untested code
 - Bypass human checkpoint
+- Patch state files to force `unlock_ship`

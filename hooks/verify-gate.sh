@@ -64,6 +64,7 @@ fi
 
 # Check verification status
 ALL_PASSED=$(jq -r '.all_checks_passed // false' "$VERIFY_STATE")
+VERIFICATION_STATE=$(jq -r '.verification_state // .status // "unknown"' "$VERIFY_STATE")
 HUMAN_APPROVED=$(jq -r '.human_checkpoint.decision // ""' "$VERIFY_STATE")
 SESSION_ID=$(jq -r '.session_id // "unknown"' "$VERIFY_STATE")
 
@@ -73,7 +74,23 @@ LINT_STATUS=$(jq -r '.phases.lint.status // "pending"' "$VERIFY_STATE")
 TYPE_STATUS=$(jq -r '.phases.type_check.status // "pending"' "$VERIFY_STATE")
 OUTPUT_STATUS=$(jq -r '.phases.output_verification.status // "pending"' "$VERIFY_STATE")
 
-# Check if all automated checks passed
+# Check if all automated checks passed and the state is a clean pass
+if [ "$VERIFICATION_STATE" != "pass" ]; then
+    cat <<EOF >&2
+Verification did not produce a clean pass.
+
+Session: ${SESSION_ID}
+Verification state: ${VERIFICATION_STATE}
+Tests:   ${TEST_STATUS}
+Lint:    ${LINT_STATUS}
+Types:   ${TYPE_STATUS}
+Output:  ${OUTPUT_STATUS}
+
+Caveated, skipped, failed, missing, or unknown verification states do not unlock normal shipping.
+EOF
+    exit 2
+fi
+
 if [ "$ALL_PASSED" != "true" ]; then
     cat <<EOF >&2
 Verification checks not all passed.
@@ -98,9 +115,9 @@ Session: ${SESSION_ID}
 Decision: ${HUMAN_APPROVED:-"none"}
 
 Use the human checkpoint to approve:
-  [Ready to Ship] - Approve for shipping
+  [Ready to Ship] - Approve clean pass for normal shipping
   [Needs Work] - Return for fixes
-  [Accept with Caveats] - Approve with noted issues
+  [Record Caveats - Ship Locked] - Record issues without unlocking normal shipping
 EOF
     exit 2
 fi
@@ -127,11 +144,11 @@ find "$PROJECT_DIR" \( \
     2>/dev/null | sort | while IFS= read -r f; do sha256_cmd "$f"; done > "$MANIFEST_FILE" 2>/dev/null || true
 
 # Generate manifest hash
-if [ -s "$MANIFEST_FILE" ]; then
+if [ -f "$MANIFEST_FILE" ]; then
     MANIFEST_SHA=$(sha256_cmd "$MANIFEST_FILE" | cut -d' ' -f1)
     FILE_COUNT=$(wc -l < "$MANIFEST_FILE")
 else
-    MANIFEST_SHA="empty"
+    MANIFEST_SHA="missing"
     FILE_COUNT=0
 fi
 
@@ -150,6 +167,7 @@ if ! jq --arg manifest "$MANIFEST_SHA" \
        --arg timestamp "$TIMESTAMP" \
        --argjson fileCount "$FILE_COUNT" \
        '. + {
+          "verification_state": "pass",
           "unlock_ship": true,
           "verified_at": $timestamp,
           "verified_manifest": $manifest,

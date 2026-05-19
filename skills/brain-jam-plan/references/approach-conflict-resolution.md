@@ -9,6 +9,7 @@ When generated approaches contradict each other, follow this resolution process.
 One approach recommends what another prohibits.
 
 **Example:**
+
 - Approach A: "Use server-side rendering for SEO benefits"
 - Approach B: "Use client-side rendering for interactivity"
 
@@ -19,6 +20,7 @@ One approach recommends what another prohibits.
 Approaches assume different underlying requirements.
 
 **Example:**
+
 - Approach A assumes: "Performance is critical, complexity acceptable"
 - Approach B assumes: "Simplicity is critical, some performance loss acceptable"
 
@@ -29,6 +31,7 @@ Approaches assume different underlying requirements.
 Approaches compete for the same limited resource.
 
 **Example:**
+
 - Approach A: "Add Redis for caching"
 - Approach B: "Add Redis for session storage"
 - Constraint: Only one Redis instance available
@@ -40,6 +43,7 @@ Approaches compete for the same limited resource.
 User feedback contradicts their earlier approval.
 
 **Example:**
+
 - Phase 2: User chose Approach A (microservices)
 - Phase 4: User says "Actually, I want a simpler monolith"
 
@@ -49,12 +53,12 @@ User feedback contradicts their earlier approval.
 
 Watch for these indicators:
 
-| Signal | Indicates |
-|--------|-----------|
-| "But in Approach A you said..." | Direct contradiction |
-| Approaches have opposite pros/cons | Assumption mismatch |
-| Multiple approaches need same resource | Resource conflict |
-| "I changed my mind" | Feedback contradiction |
+| Signal                                       | Indicates                |
+| -------------------------------------------- | ------------------------ |
+| "But in Approach A you said..."              | Direct contradiction     |
+| Approaches have opposite pros/cons           | Assumption mismatch      |
+| Multiple approaches need same resource       | Resource conflict        |
+| "I changed my mind"                          | Feedback contradiction   |
 | Research findings contradict chosen approach | New information conflict |
 
 ## Resolution Process
@@ -103,12 +107,14 @@ How important is client query flexibility?
 Based on clarification:
 
 **If one approach now clearly wins:**
+
 ```
 Based on your answer (client flexibility is critical), GraphQL is the clear choice.
 Proceeding with Approach B.
 ```
 
 **If still ambiguous:**
+
 ```
 Still unclear. Let me generate a hybrid approach that combines elements of both.
 ```
@@ -118,10 +124,12 @@ Still unclear. Let me generate a hybrid approach that combines elements of both.
 ### Scenario
 
 **Approach A: Monorepo with Turborepo**
+
 - Pros: Shared code, unified versioning, atomic changes
 - Cons: Complex build setup, learning curve
 
 **Approach B: Polyrepo with npm packages**
+
 - Pros: Team autonomy, simpler CI per repo, familiar patterns
 - Cons: Dependency management, version drift, cross-repo changes painful
 
@@ -184,7 +192,7 @@ Finding: Target deployment (AWS Lambda) doesn't support persistent connections
 Options:
 [Return to Approaches phase] - Regenerate with new constraint
 [Modify chosen approach] - Use polling or SSE instead
-[Proceed anyway] - Accept deployment limitation
+[Accept caveated limitation] - Continue with explicit risk recorded
 ```
 
 ### User Changes Mind Mid-Draft

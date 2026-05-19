@@ -39,6 +39,7 @@ Level 4: Code Review Only (last resort)
 ### Server Won't Start
 
 **Symptoms:**
+
 - Port already in use
 - Missing environment variables
 - Database not available
@@ -46,11 +47,21 @@ Level 4: Code Review Only (last resort)
 
 **Detection:**
 
-```bash
-# Check if server started
-timeout 30 bash -c 'until nc -z localhost 3000; do sleep 1; done'
+Use the harness' command timeout when available. In shell examples, prefer GNU `timeout`, `gtimeout` on macOS with coreutils, or a bounded polling loop fallback. For port readiness, use `nc` only when available and fall back to HTTP polling with `curl`.
 
-# Exit code 124 = timeout (server didn't start)
+```bash
+wait_for_http() {
+  url="$1"
+  max_wait="${2:-30}"
+  i=0
+  while [ "$i" -lt "$max_wait" ]; do
+    curl -fsS "$url" >/dev/null 2>&1 && return 0
+    sleep 1
+    i=$((i + 1))
+  done
+  return 1
+}
+wait_for_http http://localhost:3000 30
 ```
 
 **Fallback to:** Level 2 (tests)
@@ -58,6 +69,7 @@ timeout 30 bash -c 'until nc -z localhost 3000; do sleep 1; done'
 ### Screenshot Fails
 
 **Symptoms:**
+
 - Playwright not available
 - Browser won't launch (CI/headless issue)
 - Page doesn't render (JS error)
@@ -77,6 +89,7 @@ npx playwright screenshot about:blank test.png
 ### Curl Gets Unexpected Response
 
 **Symptoms:**
+
 - 500 errors on all endpoints
 - Connection refused
 - Timeout
@@ -86,6 +99,7 @@ npx playwright screenshot about:blank test.png
 ### Tests Won't Run
 
 **Symptoms:**
+
 - Test framework not installed
 - Test config broken
 - No tests exist
@@ -154,15 +168,15 @@ Each fallback should be recorded:
 
 ## Confidence Levels by Method
 
-| Method | Confidence | What It Proves |
-|--------|------------|----------------|
-| Full runtime (screenshot + curl) | High | App works end-to-end |
-| Runtime (curl only) | High | API contracts work |
-| Runtime (CLI only) | High | CLI functions work |
-| Integration tests | Medium | Components integrate |
-| Unit tests | Medium | Individual units work |
-| Type check | Low | Types are consistent |
-| Code review | Very Low | Code looks correct |
+| Method                           | Confidence | What It Proves        |
+| -------------------------------- | ---------- | --------------------- |
+| Full runtime (screenshot + curl) | High       | App works end-to-end  |
+| Runtime (curl only)              | High       | API contracts work    |
+| Runtime (CLI only)               | High       | CLI functions work    |
+| Integration tests                | Medium     | Components integrate  |
+| Unit tests                       | Medium     | Individual units work |
+| Type check                       | Low        | Types are consistent  |
+| Code review                      | Very Low   | Code looks correct    |
 
 **Confidence impacts human checkpoint:**
 
@@ -180,9 +194,9 @@ What was NOT verified:
 ✗ Browser console errors
 ✗ CSS/layout issues
 
-Caveat: Visual verification skipped - Playwright unavailable
+Caveat: Visual verification skipped - Playwright unavailable. Recording this keeps `verification_state: "caveated"` and `unlock_ship: false`; it is not a clean PASS.
 
-[Accept with caveat] [Retry with screenshot] [Manual check]
+[Record visual-verification caveat - ship locked] [Retry with screenshot] [Manual check]
 ```
 
 ## Level-Specific Guidance
@@ -297,9 +311,9 @@ This means:
 ✗ Frontend rendering NOT verified
 ✗ Browser compatibility NOT verified
 
-Recommended: Manual visual check before shipping
+Recommended: Manual visual check before shipping. If accepted without visual evidence, record `verification_state: "caveated"`, keep `unlock_ship: false`, and route through the separate caveated ship override path.
 
-[Accept with caveats]
+[Record visual-verification caveat - ship locked]
 [Block until visual verification]
 [Abort]
 ```
@@ -334,8 +348,8 @@ server.listen(port, () => {
 
 ```javascript
 // In tests
-jest.mock('./stripe-client');
-jest.mock('./email-service');
+jest.mock("./stripe-client");
+jest.mock("./email-service");
 ```
 
 ## See Also

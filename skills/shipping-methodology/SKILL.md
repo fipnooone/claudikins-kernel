@@ -41,6 +41,10 @@ Shipping is the final gate. Apply GRFP-style iterative workflow to every stage.
 4. **Human decides** - No auto-merging. Human approves final merge.
 5. **Clean up after** - Delete branches, update docs, celebrate.
 
+## Shipping Failure Rules
+
+Shipping side effects stay human-gated. Treat invalid JSON, missing approval fields, missing `files_updated`, external command failures, or two repeated tool validation errors as failed/partial documentation work. Code integrity failures route back to verification.
+
 ## The Five Stages
 
 ### Stage 1: Pre-Ship Review
@@ -197,7 +201,7 @@ CI passes. Human approves. Merge and cleanup.
 ```
 CI Status: ⏳ Running...
 
-[Wait for CI] [View logs] [Merge anyway]
+[Wait for CI] [View logs] [Request explicit failed-CI override]
 ```
 
 **On CI pass:**
@@ -297,7 +301,14 @@ fi
 
 # C-7: File manifest validation
 VERIFIED_MANIFEST=$(jq -r '.verified_manifest' "$VERIFY_STATE")
-CURRENT_MANIFEST=$(sha256sum "$MANIFEST_FILE" | cut -d' ' -f1)
+sha256_cmd() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
+CURRENT_MANIFEST=$(sha256_cmd "$MANIFEST_FILE" | cut -d' ' -f1)
 if [ "$VERIFIED_MANIFEST" != "$CURRENT_MANIFEST" ]; then
   echo "ERROR: Source files changed after verification"
   exit 2
@@ -422,7 +433,7 @@ Failed checks:
 - lint: 2 errors
 - test: 1 failure
 
-[View logs] [Fix and retry] [Skip CI] [Abort]
+[View logs] [Fix and retry] [Request explicit CI caveat override] [Abort]
 ```
 
 See [ci-failure-handling.md](references/ci-failure-handling.md) for recovery patterns.

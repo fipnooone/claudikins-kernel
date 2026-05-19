@@ -3,6 +3,7 @@
 
 # Internal docs and plans
 docs/
+PROMPT_QUALITY_AUDIT.md
 
 # OS files
 .DS_Store
