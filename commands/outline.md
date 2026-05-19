@@ -254,12 +254,37 @@ When the task involves specific API or library claims (versions, methods, instal
 
 ```typescript
 Task("taxonomy-extremist", {
-  prompt:
-    "Research ${topic} for planning ${task}. Return JSON with status, findings, search_exhausted, and tool_errors. Stop after two tool validation errors; never call tools with empty input.",
+  prompt: `
+    Research ${topic} for planning ${task}.
+
+    Mode: ${mode}
+    Required seed inputs (fill these before spawning; do not leave blank):
+    - codebase paths: ${codebasePaths.join(", ")}
+    - codebase glob patterns: ${globPatterns.join(", ")}
+    - literal search terms: ${searchTerms.join(", ")}
+    - docs/external web queries: ${webQueries.join(" | ")}
+
+    Start with one valid concrete tool call for the selected mode:
+    - codebase: Glob with a non-empty pattern and scoped path, or Grep with non-empty pattern/path.
+    - docs/external: WebSearch with a non-empty query unless an exact URL/docs source is already provided.
+    - MCP: use search_tools -> get_tool_schema -> execute_code only when MCP is genuinely needed.
+
+    Return JSON with status, findings, search_exhausted, and tool_errors.
+    Stop after two tool validation errors; never call tools with empty input.
+  `,
   context: "fork", // Isolated context
   mode: "codebase|docs|external",
 });
 ```
+
+Before spawning, derive seed inputs from the user request and known project context. If a seed list cannot be populated, use a safe explicit fallback instead of an empty value:
+
+- `codebasePaths`: project root or the specific files/directories named by the user.
+- `globPatterns`: `**/*.md` for prompt/skill research, `**/*.{ts,tsx,js,jsx}` for application code, or the narrowest pattern implied by the task.
+- `searchTerms`: concrete nouns from the request, file names, command names, agent names, or error messages.
+- `webQueries`: concrete library/API/topic queries with the current year when external research is selected.
+
+Do not spawn a research agent with vague instructions only. The prompt must contain at least one non-empty `pattern`, `path`, `query`, or exact URL appropriate to its mode.
 
 **Research result contract:**
 

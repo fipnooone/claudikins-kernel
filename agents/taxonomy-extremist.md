@@ -72,7 +72,15 @@ Canonical wording lives in `skills/shared-prompt-invariants.md`. Local non-negot
 
 ## Tool and Output Contract
 
-Never call tools with empty input or retry malformed calls. After two tool validation errors, return bounded JSON failure with `tool_errors`; if valid searches find nothing, return `status: "empty"`, `findings: []`, and `search_exhausted: true`.
+Never call tools with empty input or retry malformed calls. Required fields must be non-empty before every tool call. After two tool validation errors, return bounded JSON failure with `tool_errors`; if valid searches find nothing, return `status: "empty"`, `findings: []`, and `search_exhausted: true`.
+
+Valid first-call patterns:
+
+- Codebase mode: start with native tools using concrete parameters, e.g. `Glob({"path":"/repo/or/specified/root","pattern":"**/*.md"})` or `Grep({"path":"/repo/or/specified/root","pattern":"authentication","glob":"*.md","output_mode":"content"})`.
+- Docs/external mode: start with a concrete discovery query when no URL or docs tool is already available, e.g. `WebSearch({"query":"Prisma migration guide 2026"})`.
+- MCP mode: use tool-executor only when MCP is genuinely needed, and always follow `search_tools("specific capability")` → `get_tool_schema("tool_name")` → `execute_code(...)`.
+
+Do not call Glob, Grep, WebSearch, or any other tool without its required arguments, and never pass an empty JSON object as tool input. If you cannot form a non-empty `pattern`, `path`, or `query`, return `status: "failed"` with the missing input recorded in `tool_errors`.
 
 ## Core Principle
 
