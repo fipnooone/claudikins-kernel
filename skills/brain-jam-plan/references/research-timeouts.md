@@ -4,14 +4,26 @@ How to handle taxonomy-extremist agent timeouts gracefully.
 
 ## Default Timeouts
 
-| Mode | Default Timeout | Fast Mode (--fast-mode) |
-|------|-----------------|-------------------------|
-| Codebase | 60 seconds | 30 seconds |
-| Docs | 90 seconds | 45 seconds |
-| External | 120 seconds | 60 seconds |
-| Dual Research | 180 seconds | 90 seconds |
+| Mode          | Default Timeout | Fast Mode (--fast-mode) |
+| ------------- | --------------- | ----------------------- |
+| Codebase      | 60 seconds      | 30 seconds              |
+| Docs          | 90 seconds      | 45 seconds              |
+| External      | 120 seconds     | 60 seconds              |
+| Dual Research | 180 seconds     | 90 seconds              |
 
 These timeouts apply to each individual agent spawn, not the total research phase.
+
+## Budget Exhaustion vs Timeout
+
+Research agents also have model-level tool budgets. Budget exhaustion is different from a wall-clock timeout:
+
+| Condition                               | Meaning                                                    | Valid recovery                                                          |
+| --------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Budget exhausted with final JSON        | Agent stopped deliberately after reaching tool/read limits | Accept as `status: "partial"` evidence or retry with a narrower prompt  |
+| Wall-clock timeout with partial capture | Harness stopped an agent that did not finish in time       | Offer retry, partial continuation, skip, or different mode              |
+| Budget or timeout with no valid JSON    | Agent did not satisfy the research contract                | Treat as failed research; do not silently use it as successful research |
+
+A bounded partial JSON result is acceptable when it includes `status`, `findings`, `search_exhausted`, and `tool_errors`. Missing JSON after budget exhaustion or timeout is a failed research result and must trigger recovery handling.
 
 ## Timeout Detection
 
@@ -58,22 +70,22 @@ Partial results captured: 3 findings (normally expect 8-12)
 
 ### Step 3: Process User Choice
 
-| Choice | Action |
-|--------|--------|
-| Retry with extended timeout | Double the timeout, re-spawn agent |
-| Continue with partial | Mark research as incomplete, proceed |
-| Skip research | Set `research_complete: false`, jump to approaches |
-| Different mode | Ask for new mode, spawn fresh agent |
+| Choice                      | Action                                             |
+| --------------------------- | -------------------------------------------------- |
+| Retry with extended timeout | Double the timeout, re-spawn agent                 |
+| Continue with partial       | Mark research as incomplete, proceed               |
+| Skip research               | Set `research_complete: false`, jump to approaches |
+| Different mode              | Ask for new mode, spawn fresh agent                |
 
 ## Retry Logic
 
 ### Retry Limits
 
-| Retry | Timeout Multiplier | Notes |
-|-------|-------------------|-------|
-| 1st retry | 2x | Double original timeout |
-| 2nd retry | 3x | Triple original timeout |
-| 3rd retry | N/A | No more retries, escalate |
+| Retry     | Timeout Multiplier | Notes                     |
+| --------- | ------------------ | ------------------------- |
+| 1st retry | 2x                 | Double original timeout   |
+| 2nd retry | 3x                 | Triple original timeout   |
+| 3rd retry | N/A                | No more retries, escalate |
 
 ### Backoff Strategy
 
@@ -103,11 +115,13 @@ Retry with: [Same query] [Narrower scope] [Different mode] [Give up]
 ### Codebase Mode
 
 **Common causes:**
+
 - Very large codebase (>100k files)
 - Serena indexing slow
 - Complex regex patterns in Grep
 
 **Mitigations:**
+
 - Narrow file patterns (specific directories)
 - Simpler search terms
 - Use Glob before Grep to reduce file set
@@ -115,11 +129,13 @@ Retry with: [Same query] [Narrower scope] [Different mode] [Give up]
 ### Docs Mode
 
 **Common causes:**
+
 - Context7 library fetch slow
 - WebFetch hitting rate limits
 - Large documentation sites
 
 **Mitigations:**
+
 - Target specific docs sections
 - Use cached results if available
 - Skip WebFetch, use only Context7
@@ -127,11 +143,13 @@ Retry with: [Same query] [Narrower scope] [Different mode] [Give up]
 ### External Mode
 
 **Common causes:**
+
 - Gemini API latency
 - WebSearch rate limits
 - Large response processing
 
 **Mitigations:**
+
 - Reduce Gemini prompt complexity
 - Fewer WebSearch queries
 - Process results in batches

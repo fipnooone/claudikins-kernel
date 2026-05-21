@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Bound outline research behavior with documented clamped per-task budgets for calls/files/searches, deterministic stop conditions, and repeated-read/search guards in `agents/taxonomy-extremist.md` and `commands/outline.md`.
+- Added budget-exhaustion vs wall-clock timeout distinction and recovery guidance for outline research in `skills/brain-jam-plan/references/research-timeouts.md`.
+
 ## [1.7.6] - 2026-05-17
 
 ### Added

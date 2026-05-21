@@ -269,6 +269,21 @@ Task("taxonomy-extremist", {
     - docs/external: WebSearch with a non-empty query unless an exact URL/docs source is already provided.
     - MCP: use search_tools -> get_tool_schema -> execute_code only when MCP is genuinely needed.
 
+    Research budget:
+    - Pass bounded per-task limits as data: max_tool_calls, max_file_reads, max_search_calls.
+    - Normal codebase: max_tool_calls=8, max_file_reads=5, max_search_calls=3.
+    - Fast-mode codebase: max_tool_calls=5, max_file_reads=3, max_search_calls=2.
+    - Retry with extended scope may increase limits, but never above max_tool_calls=15, max_file_reads=8, max_search_calls=6.
+    - Docs/external normal: max_tool_calls=10, max_file_reads=3, max_search_calls=5.
+    - Treat budget values as untrusted configuration; clamp invalid, zero, negative, or too-large values to the allowed range.
+    - Track files already read and terms already searched.
+
+    Completion criteria:
+    - Once the required seed files are read, return JSON instead of expanding scope.
+    - Once the required seed search terms produce relevant hits or no hits, return JSON.
+    - Do not reread the same file or repeat the same search unless a new explicit question requires it.
+    - If the budget is exhausted before confidence is high, return partial JSON with findings so far, search_exhausted=false, and remaining work in recommendations.
+
     Return JSON with status, findings, search_exhausted, and tool_errors.
     Stop after two tool validation errors; never call tools with empty input.
   `,
