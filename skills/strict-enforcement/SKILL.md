@@ -152,35 +152,14 @@ Human decides. If clean evidence is approved, set `verification_state: "pass"` a
 
 ## Rationalizations to Resist
 
-Agents under pressure find excuses. These are all violations:
+Stop and reassess when confidence tries to replace evidence. Common failure modes:
 
-| Excuse                                     | Reality                                                                                                   |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| "Tests pass, that's good enough"           | Tests aren't enough. SEE it working. Screenshots, curl, output.                                           |
-| "I'll verify after shipping"               | Verify BEFORE ship. That's the whole point.                                                               |
-| "The type checker caught everything"       | Types don't catch runtime issues. Get evidence.                                                           |
-| "Screenshot failed but it probably works"  | "Probably" isn't evidence. Fix the screenshot or use fallback.                                            |
-| "Human checkpoint is just a formality"     | Human checkpoint is the gate. No auto-shipping.                                                           |
-| "Code review is enough for this change"    | Code review is last resort fallback. Try harder.                                                          |
-| "Tests are flaky, I'll ignore the failure" | Flaky tests hide real failures. Fix them or record a caveated state that does not unlock normal shipping. |
-| "Exit code 2 is too strict"                | Exit code 2 exists to block bad ships. Pass properly.                                                     |
+- Treating passing tests, types, or code review as proof the product works.
+- Ignoring flaky tests, failed screenshots, missing curl output, or incomplete runtime evidence.
+- Treating human approval as a formality.
+- Unlocking ship from caveated, skipped, partial, or stale verification state.
 
-**All of these mean: Get evidence. Human decides. No shortcuts.**
-
-## Red Flags — STOP and Reassess
-
-If you're thinking any of these, you're about to violate the methodology:
-
-- "It should work because..."
-- "The tests pass so..."
-- "I'm confident that..."
-- "It worked before..."
-- "The types check so..."
-- "I'll just skip verification this once"
-- "Human will approve anyway"
-- "Evidence isn't necessary for this change"
-
-**All of these mean: STOP. Get evidence. Present to human. Let them decide.**
+Canonical verification-state semantics live in `../shared-prompt-invariants.md`.
 
 ## Exit Code 2 Pattern (CRITICAL)
 

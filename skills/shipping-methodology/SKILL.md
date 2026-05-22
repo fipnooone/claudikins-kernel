@@ -234,36 +234,15 @@ Nice work!
 
 ## Rationalizations to Resist
 
-Agents under pressure find excuses. These are all violations:
+Stop and reassess when shipping pressure would bypass verification, integrity, documentation, CI, or human approval. Common failure modes:
 
-| Excuse                                      | Reality                                                                  |
-| ------------------------------------------- | ------------------------------------------------------------------------ |
-| "Verify passed yesterday, close enough"     | Stale verification = no verification. Re-run claudikins-kernel:verify.   |
-| "Just a tiny fix after verify, no big deal" | Any change after verify invalidates it. Re-run claudikins-kernel:verify. |
-| "CI is flaky, I'll merge anyway"            | Flaky CI hides real failures. Fix or explicitly skip with caveat.        |
-| "It's just a typo, skip the PR"             | All changes go through PR. No exceptions.                                |
-| "Both reviewers passed, auto-merge is fine" | Human approves final merge. Always.                                      |
-| "I'll update the changelog later"           | Changelog is part of shipping. Do it now.                                |
-| "Force push is fine, it's my branch"        | Never force push to protected branches. Ever.                            |
-| "Skip docs, nobody reads them"              | Docs are part of shipping. GRFP them.                                    |
-| "The gate check is too strict"              | The gate exists for a reason. Pass it properly.                          |
+- Treating stale/caveated verification as normal PASS.
+- Modifying code after verify without rerunning verify.
+- Creating PRs, pushing, merging, or force-pushing without the required checkpoint.
+- Skipping docs/version/changelog work that belongs to ship.
+- Treating CI or external-service failures as ignorable.
 
-**All of these mean: Follow the methodology. Shortcuts create incidents.**
-
-## Red Flags — STOP and Reassess
-
-If you're thinking any of these, you're about to violate the methodology:
-
-- "Let me just push this one change..."
-- "Verify is probably still valid"
-- "CI will pass next time"
-- "I'll do the PR properly next time"
-- "Auto-merge saves time"
-- "Docs can wait"
-- "Force push will fix it"
-- "The human already approved something similar"
-
-**All of these mean: STOP. Gate check exists. Human decides. Follow the stages.**
+Canonical gate, artifact, and git-ownership rules live in `../shared-prompt-invariants.md`; recovery patterns remain below.
 
 ## Gate Check Pattern (CRITICAL)
 

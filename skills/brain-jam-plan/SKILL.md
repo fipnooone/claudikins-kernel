@@ -152,53 +152,15 @@ See [plan-format.md](references/plan-format.md) for complete structure.
 
 ## Anti-Patterns
 
-**Don't do these:**
+Stop and reassess when planning shortcuts would weaken user involvement or evidence. Common failure modes:
 
-- Batching multiple questions together
-- Proposing solutions before understanding requirements
-- Presenting only one approach
-- Skipping the verification checklist
-- Continuing without explicit approval at checkpoints
-- Fabricating research findings when data is sparse
-- Waiting indefinitely while an agent repeats malformed or invalid tool calls
-- Treating invalid JSON or missing required fields as a successful research result
+- Batching questions or approvals.
+- Proposing only one approach or solving before requirements are clear.
+- Continuing without explicit checkpoints.
+- Fabricating research, relying on stale memory, or leaving specific API/library claims unverified.
+- Waiting indefinitely on malformed/empty research outputs.
 
-## Rationalizations to Resist
-
-Agents under pressure find excuses. These are all violations:
-
-| Excuse                                                | Reality                                                                                          |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| "I'll batch questions to save time"                   | Batching causes missed requirements. One at a time.                                              |
-| "User knows what they want, skip brain-jam"           | Assumptions cause rework. Gather requirements explicitly.                                        |
-| "I'll propose solutions while gathering requirements" | Solutions bias requirements. Understand first, solve second.                                     |
-| "User implied preference, don't need alternatives"    | Implied ≠ decided. Always present 2-3 options.                                                   |
-| "This is simple, don't need checkpoints"              | Simple plans still fail. Checkpoints catch errors early.                                         |
-| "I already know the right approach"                   | Your confidence isn't approval. User decides.                                                    |
-| "Alternatives will confuse them"                      | Confusion means requirements are unclear. Clarify.                                               |
-| "I'll get approval for multiple sections at once"     | Batched approvals hide problems. One section, one checkpoint.                                    |
-| "I know how this library works"                       | Memory knowledge expires. Verify against docs or mark `[UNVERIFIED]`.                            |
-| "The agent will recover if I wait"                    | Repeated malformed tool calls are a failed research result. Stop, record, and recover.           |
-| "Invalid JSON is close enough"                        | Structured output contracts are gates. Missing required fields means failure or manual recovery. |
-
-**All of these mean: Follow the methodology. No shortcuts.**
-
-## Red Flags — STOP and Reassess
-
-If you're thinking any of these, you're about to violate the methodology:
-
-- "Let me just quickly..."
-- "The user probably wants..."
-- "This is obvious, I don't need to ask"
-- "I'll come back to requirements later"
-- "One approach is clearly best"
-- "They already approved something similar"
-- "Checkpoints slow things down"
-- "I know what they meant"
-- "I know what version this library is at"
-- "This API method does X" (without checking docs first)
-
-**All of these mean: STOP. Return to methodology. Ask, don't assume.**
+Canonical delegation and artifact-failure rules live in `../shared-prompt-invariants.md`.
 
 ## Edge Case Handling
 
