@@ -15,15 +15,46 @@ These timeouts apply to each individual agent spawn, not the total research phas
 
 ## Budget Exhaustion vs Timeout
 
-Research agents also have model-level tool budgets. Budget exhaustion is different from a wall-clock timeout:
+Research agents have bounded tool budgets in their prompt contract, but those prompt budgets are not true pre-tool hard guards unless the runtime exposes supported pre-tool interception. Treat budget handling as post-run/stop-time validation by default.
 
 | Condition                               | Meaning                                                    | Valid recovery                                                          |
 | --------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Budget exhausted with final JSON        | Agent stopped deliberately after reaching tool/read limits | Accept as `status: "partial"` evidence or retry with a narrower prompt  |
+| Budget exhausted with valid final JSON  | Agent stopped deliberately after reaching tool/read limits | Accept as `status: "partial"` evidence or retry with a narrower prompt  |
 | Wall-clock timeout with partial capture | Harness stopped an agent that did not finish in time       | Offer retry, partial continuation, skip, or different mode              |
 | Budget or timeout with no valid JSON    | Agent did not satisfy the research contract                | Treat as failed research; do not silently use it as successful research |
+| Missing usage fields                    | Budget compliance cannot be assessed                       | Treat as failed or `partial` at best; never mark as full success        |
 
-A bounded partial JSON result is acceptable when it includes `status`, `findings`, `search_exhausted`, and `tool_errors`. Missing JSON after budget exhaustion or timeout is a failed research result and must trigger recovery handling.
+A bounded partial JSON result is acceptable only when it includes `status`, `findings`, `search_exhausted`, `tool_errors`, `tool_usage`, `budget`, `budget_exhausted`, `duplicate_calls`, `usage_source`, and `recommendations`. Missing JSON after budget exhaustion or timeout is a failed research result and must trigger recovery handling.
+
+## Research Result Classification
+
+| Status    | Required interpretation                                                                                                                                                                        |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ok`      | Valid JSON, required fields present, budget not exceeded, no blocking duplicate loop, findings sufficient for the requested mode.                                                              |
+| `partial` | Valid JSON with useful findings but budget exhausted, timeout caveat, unavailable usage source, or incomplete coverage.                                                                        |
+| `empty`   | Valid JSON, no findings, and the search space was exhausted or produced no relevant hits.                                                                                                      |
+| `failed`  | Invalid JSON, missing required fields, missing `tool_usage`, impossible counters, over-budget without `budget_exhausted=true`, duplicate loop without explanation, or no output after timeout. |
+
+Budget violation rules:
+
+- If `tool_usage.total_tool_calls > budget.max_tool_calls`, classify as `failed` unless transcript parsing proves the excess came from harness overhead rather than agent tools.
+- If `tool_usage.search_calls > budget.max_search_calls`, classify as `failed`.
+- If `tool_usage.file_reads > budget.max_file_reads`, classify as `failed`.
+- If `tool_usage.mcp_calls > budget.max_mcp_calls`, classify as `failed`.
+- If `usage_source=unavailable`, classify as `partial` at best.
+
+Duplicate rules:
+
+- Duplicate call fingerprint: `tool + stable_json(normalized_args)`.
+- Duplicate search fingerprint: lowercase, whitespace-collapsed query text with volatile year/date terms preserved only when semantically required.
+- Repeated calls are allowed only when their `purpose` names a new explicit question or changed scope. Otherwise classify as `partial` or `failed` depending on whether useful findings exist.
+
+## Telemetry Source Hierarchy
+
+1. Prefer transcript-derived usage if `SubagentStop` exposes a readable `transcript_path` containing tool calls.
+2. Otherwise use hook payload fields if they include structured tool-call counts or result metadata.
+3. Otherwise use self-reported `tool_usage` from the agent JSON and mark `usage_source="self_reported"`.
+4. If none is available, mark `usage_source="unavailable"` and never report research as fully `ok`.
 
 ## Timeout Detection
 

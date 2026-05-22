@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.9] - 2026-05-22
+
+### Fixed
+
+- Hardened `/outline` research orchestration so external research is only selected for explicit or genuinely external needs, with concrete seed inputs and explicit per-agent budget data in research prompts.
+- Added exact `taxonomy-extremist` research JSON contracts for tool usage, budgets, duplicate calls, usage sources, recommendations, and bounded stop conditions.
+- Strengthened `capture-research.sh` to classify malformed, missing, duplicate, over-budget, self-reported, and transcript-derived research outputs before updating plan state.
+- Documented honest post-run/stop-time research validation, telemetry source hierarchy, budget violation rules, and timeout recovery behavior.
+
 ## [1.7.8] - 2026-05-22
 
 ### Changed

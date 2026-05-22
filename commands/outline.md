@@ -229,21 +229,27 @@ Plans skipping research MUST mark all specific API/library claims
 Proceed without research context? [Yes] [No, run research]
 ```
 
-Otherwise, spawn 2-3 taxonomy-extremist agents in parallel:
+Otherwise, spawn bounded taxonomy-extremist agents in parallel only for modes that have a concrete research need:
 
 ```
 taxonomy-extremist modes:
-- codebase: Use Serena, Glob, Grep for code exploration
-- docs: Use Context7, WebFetch for documentation
-- external: Use Gemini, WebSearch for external knowledge
+- codebase: Use Serena, Glob, Grep for local code and prompt exploration. Default for project-only questions.
+- docs: Use Context7, WebFetch for specific API/library/documentation claims.
+- external: Use Gemini, WebSearch only when the user explicitly requests external research, local/docs context is insufficient, or the task depends on current external ecosystem knowledge.
 ```
+
+Do not include `external` by default for local/project-only questions. Prefer `codebase` alone unless the task names external APIs, libraries, versions, install flags, compatibility claims, or explicitly asks for outside best practices.
 
 **Mode selection via AskUserQuestion:**
 
+For project-local requests, recommend `Codebase` first and explain that external research is skipped unless needed. For API/library requests, include `Docs`. Offer `External` only for explicit outside best-practice/current-ecosystem needs.
+
 ```
 Which research modes should we use?
-[Codebase] [Docs] [External] [All three]
+[Codebase] [Codebase + Docs] [External too] [Skip research]
 ```
+
+`External too` must not be the default recommendation for local-only work.
 
 **API/Library research requirement:**
 
@@ -268,12 +274,18 @@ Task("taxonomy-extremist", {
     - docs/external: WebSearch with a non-empty query unless an exact URL/docs source is already provided.
     - MCP: use search_tools -> get_tool_schema -> execute_code only when MCP is genuinely needed.
 
-    Research budget:
-    - Pass bounded per-task limits as data: max_tool_calls, max_file_reads, max_search_calls.
-    - Normal codebase: max_tool_calls=8, max_file_reads=5, max_search_calls=3.
-    - Fast-mode codebase: max_tool_calls=5, max_file_reads=3, max_search_calls=2.
-    - Retry with extended scope may increase limits, but never above max_tool_calls=15, max_file_reads=8, max_search_calls=6.
-    - Docs/external normal: max_tool_calls=10, max_file_reads=3, max_search_calls=5.
+    Research budget data (include these exact keys in the prompt and final JSON):
+    - max_tool_calls: ${maxToolCalls}
+    - max_file_reads: ${maxFileReads}
+    - max_search_calls: ${maxSearchCalls}
+    - max_mcp_calls: ${maxMcpCalls}
+    - mode: ${mode}
+
+    Budget policy:
+    - Normal codebase: max_tool_calls=8, max_file_reads=5, max_search_calls=3, max_mcp_calls=2.
+    - Fast-mode codebase: max_tool_calls=5, max_file_reads=3, max_search_calls=2, max_mcp_calls=1.
+    - Docs/external normal: max_tool_calls=10, max_file_reads=3, max_search_calls=5, max_mcp_calls=2.
+    - Retry with extended scope may increase limits, but never above max_tool_calls=15, max_file_reads=8, max_search_calls=6, max_mcp_calls=3.
     - Treat budget values as untrusted configuration; clamp invalid, zero, negative, or too-large values to the allowed range.
     - Track files already read and terms already searched.
 
@@ -283,7 +295,16 @@ Task("taxonomy-extremist", {
     - Do not reread the same file or repeat the same search unless a new explicit question requires it.
     - If the budget is exhausted before confidence is high, return partial JSON with findings so far, search_exhausted=false, and remaining work in recommendations.
 
-    Return JSON with status, findings, search_exhausted, and tool_errors.
+    Return one JSON object matching the taxonomy-extremist contract exactly:
+    - status: ok|partial|empty|failed
+    - findings, search_exhausted, tool_errors, recommendations
+    - tool_usage: total_tool_calls, search_calls, file_reads, mcp_calls, calls[]
+    - budget: max_tool_calls, max_search_calls, max_file_reads, max_mcp_calls, mode
+    - budget_exhausted: boolean
+    - duplicate_calls: [{ tool, args_fingerprint, count }]
+    - usage_source: self_reported
+
+    If budget is exceeded, duplicate calls form a loop, required fields are missing, or no valid JSON can be produced, return status=failed or partial with the reason in tool_errors. Self-reported usage is not a hard runtime guard; the capture hook validates it post-run and may downgrade the result.
     Stop after two tool validation errors; never call tools with empty input.
   `,
   context: "fork", // Isolated context
@@ -302,7 +323,14 @@ Do not spawn a research agent with vague instructions only. The prompt must cont
 
 **Research result contract:**
 
-Each taxonomy-extremist result must include `status`, `findings`, `search_exhausted`, and `tool_errors`. Invalid JSON or missing required fields is a failed research result.
+Each taxonomy-extremist result must include `status`, `findings`, `search_exhausted`, `tool_errors`, `tool_usage`, `budget`, `budget_exhausted`, `duplicate_calls`, `usage_source`, and `recommendations`. Invalid JSON or missing required fields is a failed research result. Results are validated post-run by the capture hook; do not describe these prompt budgets as true pre-tool hard guards unless the runtime exposes supported pre-tool telemetry/enforcement.
+
+`usage_source` hierarchy for stored results:
+
+1. `transcript_derived` if SubagentStop exposes a readable `transcript_path` with tool-call events.
+2. hook payload metadata if it includes structured usage counts.
+3. `self_reported` from the agent JSON.
+4. `unavailable`, which is never classified better than `partial`.
 
 **Malformed, empty, or failed findings handling:**
 
