@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.8] - 2026-05-22
+
+### Changed
+
+- Consolidated shared prompt-safety, pipeline, evidence, and handoff invariants into `skills/shared-prompt-invariants.md` with resolving references from commands, agents, and skills to reduce duplicated instruction text while preserving behavior.
+- Compact repeated command and skill enforcement prose while keeping local stage-specific non-negotiables.
+
 ### Fixed
 
 - Bound outline research behavior with documented clamped per-task budgets for calls/files/searches, deterministic stop conditions, and repeated-read/search guards in `agents/taxonomy-extremist.md` and `commands/outline.md`.
 - Added budget-exhaustion vs wall-clock timeout distinction and recovery guidance for outline research in `skills/brain-jam-plan/references/research-timeouts.md`.
+- Ensure `/outline` presents exactly one final interactive next-step checkpoint for execution handoff.
+- Scope review artifacts by execute session and validate embedded task/session/plan identity before allowing task branch merges.
+- Detect empty or wrong-root task worktrees by checking expected task files during `babyclaude` worktree creation.
+- Anchor command-specific hook matchers and avoid stale completed verify-state replay loops on unrelated Stop events.
+- Exclude nested `.claude/worktrees` copies from verify integrity manifests.
 
 ## [1.7.6] - 2026-05-17
 
