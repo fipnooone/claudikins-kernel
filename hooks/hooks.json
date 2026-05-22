@@ -14,7 +14,7 @@
         ]
       },
       {
-        "matcher": "(/)?claudikins-kernel:verify",
+        "matcher": "^(/verify|(/)?claudikins-kernel:verify)(\\s|$)",
         "hooks": [
           {
             "type": "command",
@@ -24,7 +24,7 @@
         ]
       },
       {
-        "matcher": "(/)?claudikins-kernel:ship",
+        "matcher": "^(/ship|(/)?claudikins-kernel:ship)(\\s|$)",
         "hooks": [
           {
             "type": "command",
@@ -166,7 +166,7 @@
     ],
     "Stop": [
       {
-        "matcher": "(/)?claudikins-kernel:verify",
+        "matcher": "^(/verify|(/)?claudikins-kernel:verify)(\\s|$)",
         "hooks": [
           {
             "type": "command",
@@ -176,7 +176,7 @@
         ]
       },
       {
-        "matcher": "(/)?claudikins-kernel:ship",
+        "matcher": "^(/ship|(/)?claudikins-kernel:ship)(\\s|$)",
         "hooks": [
           {
             "type": "command",
@@ -186,7 +186,7 @@
         ]
       },
       {
-        "matcher": "(/)?claudikins-kernel:outline",
+        "matcher": "^(/outline|(/)?claudikins-kernel:outline)(\\s|$)",
         "hooks": [
           {
             "type": "command",

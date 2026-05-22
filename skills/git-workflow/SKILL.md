@@ -121,7 +121,7 @@ After EVERY task completes, you MUST spawn BOTH reviewer agents:
 | `Task("spec-reviewer", { prompt: "...", context: "fork" })` | Inline spec check by orchestrator      |
 | `Task("code-reviewer", { prompt: "...", context: "fork" })` | "I'll just verify the code looks good" |
 | Waiting for agent output JSON                               | Making your own compliance table       |
-| Reading from `.claude/reviews/spec/`                        | Skipping because "it's a simple task"  |
+| Reading from `.claude/reviews/{session_id}/spec/`           | Skipping because "it's a simple task"  |
 
 ### Inline Reviews Are VIOLATIONS
 
@@ -139,9 +139,10 @@ If you find yourself doing ANY of these, you are VIOLATING the methodology:
 Before ANY merge decision can be offered to the user:
 
 ```
-□ .claude/reviews/spec/{task_id}.json EXISTS for each task
-□ .claude/reviews/code/{task_id}.json EXISTS for each task
+□ .claude/reviews/{session_id}/spec/{task_id}.json EXISTS for each task, or artifact metadata matches session_id/plan_source/task_id
+□ .claude/reviews/{session_id}/code/{task_id}.json EXISTS for each task, or artifact metadata matches session_id/plan_source/task_id
 □ Both files contain valid JSON with "verdict" field
+□ Artifact identity matches the active execute session and plan source
 □ spec-reviewer verdict is PASS (or user override documented)
 ```
 
@@ -188,38 +189,15 @@ See [batch-patterns.md](references/batch-patterns.md) for decision trees.
 
 ## Rationalizations to Resist
 
-Agents under pressure find excuses. These are all violations:
+Stop and reassess when speed tempts you to weaken isolation, review, checkpoint, or git-ownership rules. Common failure modes:
 
-| Excuse                                     | Reality                                                             |
-| ------------------------------------------ | ------------------------------------------------------------------- |
-| "30 agents is fine, tasks are independent" | More agents = more chaos. 5-7 per session, features as units.       |
-| "I'll just checkout main to compare"       | Agents don't own git. Use `git show main:file` instead.             |
-| "Skip spec review, code looks correct"     | Spec review catches scope creep. Never skip.                        |
-| "I'll do the review myself, it's simple"   | Spawn the reviewer agents. Inline reviews are VIOLATIONS.           |
-| "Both passed, auto-merge is safe"          | Human checkpoint required. Always.                                  |
-| "Context is fine, I'll continue"           | ACM at 60% = checkpoint offer. 75% = mandatory stop.                |
-| "This tiny task doesn't need a branch"     | One task = one branch. No exceptions. Isolation prevents pollution. |
-| "Retry limit is just a guideline"          | 2 retries then escalate. Infinite retry = infinite waste.           |
-| "I'll merge my changes when done"          | Commands own merge. You own implementation. Stay in your lane.      |
+- Too many parallel agents instead of feature-sized batches.
+- Inline spec/code review instead of spawning reviewers.
+- Skipping human checkpoints after reviews.
+- Letting stale/bare task-id review artifacts stand in for session-scoped evidence.
+- Treating retry limits, context warnings, or branch isolation as optional.
 
-**All of these mean: Follow the methodology. Speed is not the goal.**
-
-## Red Flags — STOP and Reassess
-
-If you're thinking any of these, you're about to violate the methodology:
-
-- "Let me just run git checkout..."
-- "30 tasks, 30 agents, maximum parallelism"
-- "Review passed, no need for human checkpoint"
-- "Context is getting tight but I can finish"
-- "This is simple, don't need isolation"
-- "I'll merge it myself"
-- "Retry limit doesn't apply here"
-- "Spec review is redundant if code review passes"
-- "Let me verify the implementation meets criteria" (SPAWN THE AGENT)
-- "I'll create a quick compliance table" (SPAWN THE AGENT)
-
-**All of these mean: STOP. Commands own git. Humans own checkpoints. Reviewers own reviews. You own orchestration.**
+Canonical failure handling lives in `../shared-prompt-invariants.md`; detailed recovery patterns are below and in `references/`.
 
 ## Robustness Patterns
 

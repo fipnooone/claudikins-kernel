@@ -88,10 +88,47 @@ fi
 
 # Create worktree for the branch
 if GIT_OUTPUT=$(git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" 2>&1); then
+    # Validate expected task files are present in the isolated worktree. Without
+    # this guard, nested/untracked project layouts can create an apparently valid
+    # worktree that contains no files the implementation agent can edit.
+    MISSING_FILES=""
+    EXPECTED_FILES=$(jq -r --arg taskId "$TASK_ID" '(.tasks // [])[] | select((.id | tostring) == $taskId) | (.files // [])[]?' "$STATE_FILE" 2>/dev/null || true)
+    if [ -n "$EXPECTED_FILES" ]; then
+        while IFS= read -r expected_file; do
+            [ -z "$expected_file" ] && continue
+            case "$expected_file" in
+                /*)
+                    rel_file="${expected_file#$PROJECT_DIR/}"
+                    ;;
+                *)
+                    rel_file="$expected_file"
+                    ;;
+            esac
+            if [ ! -e "$WORKTREE_PATH/$rel_file" ]; then
+                MISSING_FILES="${MISSING_FILES}${rel_file}\n"
+            fi
+        done <<< "$EXPECTED_FILES"
+    fi
+
+    if [ -n "$MISSING_FILES" ]; then
+        git worktree remove --force "$WORKTREE_PATH" 2>/dev/null || true
+        git branch -D "$BRANCH_NAME" 2>/dev/null || true
+        echo "ERROR: Created task worktree is missing expected task files." >&2
+        echo "" >&2
+        echo "Task: $TASK_ID" >&2
+        echo "Worktree: $WORKTREE_PATH" >&2
+        echo "Missing files:" >&2
+        printf '%b' "$MISSING_FILES" | sed 's/^/  - /' >&2
+        echo "" >&2
+        echo "This usually means the target project files are untracked, ignored, or live in a nested repository not included in the current git worktree." >&2
+        echo "Commit or track the relevant files, run execute from the nested repository, or adjust the plan to the correct project root before spawning babyclaude." >&2
+        exit 2
+    fi
+
     # Update state file with branch and worktree info
     if [ -f "$STATE_FILE" ]; then
         jq --arg branch "$BRANCH_NAME" --arg taskId "$TASK_ID" --arg worktree "$WORKTREE_PATH" \
-           '.tasks = [.tasks[] | if .id == $taskId then .branch = $branch | .worktree_path = $worktree else . end]' \
+           '.tasks = [.tasks[] | if (.id | tostring) == $taskId then .branch = $branch | .worktree_path = $worktree else . end]' \
            "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
     fi
 

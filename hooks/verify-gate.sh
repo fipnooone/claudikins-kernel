@@ -48,6 +48,16 @@ if [ ! -f "$VERIFY_STATE" ]; then
     exit 0
 fi
 
+# If a stale completed/pass verify state is encountered by a non-verify Stop
+# event, do not reacquire the lock or rewrite state. This prevents hook feedback
+# loops when OpenClaude replays Stop hooks after ordinary assistant turns.
+VERIFY_COMMAND=$(echo "$INPUT" | jq -r '.prompt // .command // .user_prompt // ""' 2>/dev/null || echo "")
+if jq -e '(.status == "completed") and ((.verification_state // .status) == "pass") and (.unlock_ship == true)' "$VERIFY_STATE" >/dev/null 2>&1; then
+    if ! printf '%s' "$VERIFY_COMMAND" | grep -qE '^(/verify|(/)?claudikins-kernel:verify)([[:space:]]|$)'; then
+        exit 0
+    fi
+fi
+
 # === File Locking (C-8) — portable (works on macOS + Linux) ===
 LOCK_DIR="${VERIFY_STATE}.lock"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -134,6 +144,7 @@ find "$PROJECT_DIR" \( \
     \) \
     -not -path '*/node_modules/*' \
     -not -path '*/.git/*' \
+    -not -path '*/.claude/worktrees/*' \
     -not -path '*/target/*' \
     -not -path '*/dist/*' \
     -not -path '*/build/*' \

@@ -148,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Review Enforcement** in git-workflow skill and execute.md - reviewer agents (spec-reviewer, code-reviewer) MUST be spawned; inline reviews are now violations
-- Pre-merge checklist requiring `.claude/reviews/spec/` and `.claude/reviews/code/` files to exist
+- Pre-merge checklist requiring session-scoped `.claude/reviews/{session_id}/spec/` and `.claude/reviews/{session_id}/code/` files to exist
 - Test task detection and implementation source injection in execute.md - prevents test agents from hallucinating interfaces
 - Defensive "For Test Tasks" section in babyclaude.md - blocks if implementation sources not provided
 - Worktree path injection in babyclaude spawn with `cwd: worktreePath` for proper isolation
