@@ -219,7 +219,7 @@ disallowedTools:
 6. Repeat until:
    - No more improvements found, OR
    - 3 passes complete, OR
-   - 3 consecutive failures
+   - 5 consecutive failures
 ```
 
 ### Output Format

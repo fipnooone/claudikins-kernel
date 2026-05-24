@@ -436,7 +436,7 @@ Task(cynic, {
     - Tests MUST still pass after each change
     - One change at a time
     - Revert on test failure
-    - Stop after 3 passes or 3 consecutive failures
+    - Stop after 3 passes or 5 consecutive failures
     - Never call tools with empty input
     - If tests cannot be run after a change, stop and report caveats
 

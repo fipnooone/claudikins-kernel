@@ -313,7 +313,7 @@ Preventing cascading failures when operations fail repeatedly.
 
 ```
 Circuit: agent_spawn
-State: OPEN (3 failures in 60s)
+State: OPEN (10 failures in 60s)
 Reset in: 30 seconds
 
 [Wait for reset] [Force close] [Skip operation]

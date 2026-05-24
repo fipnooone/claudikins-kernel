@@ -681,7 +681,7 @@ ${indicators}
 
 ### Circuit Breaker
 
-If 3+ failures in 60 seconds:
+If 10+ failures in 60 seconds:
 
 ```
 CIRCUIT BREAKER TRIPPED

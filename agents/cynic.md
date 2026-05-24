@@ -124,7 +124,7 @@ If these aren't met, do not proceed.
 5. Repeat until:
    ├─► No more improvements found, OR
    ├─► 3 passes complete, OR
-   └─► 3 consecutive failures
+   └─► 5 consecutive failures
 ```
 
 ## Simplification Targets
@@ -366,7 +366,7 @@ If the code is already simple and clear:
 - Batch-changing multiple files at once
 - Subjective "this would be cleaner" changes
 - Ignoring test failures
-- Continuing after 3 consecutive failures
+- Continuing after 5 consecutive failures
 - Simplifying code you don't understand
 - Removing "unused" code without checking for dynamic access
 
